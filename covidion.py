@@ -133,10 +133,39 @@ def main():
 
     args = get_arguments()
 
-    print(args)
 
 
+    ######################################################################
+    ########################### START PIPELINE ###########################
+    ######################################################################
 
+    output = os.path.abspath(args.output)
+    group_name = output.split('/')[-1]
+    reference = os.path.abspath(args.reference)
+    annotation = os.path.abspath(args.annotation)
+
+
+    # Logging
+    ## Create log file with date and time
+
+    right_now = str(datetime.datetime.now())
+    right_now_full = "_".join(right_now.split(" "))
+    log_filename = group_name + "_" + right_now_full + ".log"
+    log_folder = os.path.join(output, 'Logs')
+    check_create_dir(log_folder)
+    log_full_path = os.path.join(log_folder, log_filename)
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s:%(message)s')
+
+    file_handler = logging.FileHandler(log_full_path)
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(formatter)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.INFO)
+    # stream_handler.setFormatter(formatter)
 
 
 
