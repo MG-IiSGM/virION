@@ -6,14 +6,16 @@ import sys
 import re
 import logging
 
+
 # Third party imports
 import argparse
 import subprocess
 import datetime
 
+
 # Local application imports
 
-
+from misc_ion import check_create_dir, check_file_exists, check_remove_file, execute_subprocess
 
 
 """
@@ -36,6 +38,15 @@ END_OF_HEADER
 """
 
 # COLORS AND AND FORMATTING
+
+"""
+http://ozzmaker.com/add-colour-to-text-in-python/
+The above ANSI escape code will set the text colour to bright green. The format is;
+\033[  Escape code, this is always the same
+1 = Style, 1 for normal.
+32 = Text colour, 32 for bright green.
+40m = Background colour, 40 is for black.
+"""
 
 END_FORMATTING = '\033[0m'
 WHITE_BG = '\033[0;30;47m'
@@ -166,6 +177,9 @@ def main():
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
     # stream_handler.setFormatter(formatter)
+
+    logger.addHandler(stream_handler)
+    logger.addHandler(file_handler)
 
 
 
