@@ -94,5 +94,56 @@ def execute_subprocess(cmd, isShell = False):
 		sys.exit(RED + BOLD + "Failed to execute program '%s': %s" % (prog, str(e)) + END_FORMATTING)
 
 
+def check_reanalysis(output_dir):
+	output_dir = os.path.abspath(output_dir)
+	# group = output_dir.split('/')[-1]
+
+	bam_dir = os.path.join(output_dir, 'Bam')
+	vcf_dir = os.path.join(output_dir, 'VCF')
+	vcfr_dir = os.path.join(output_dir, 'VCF_recal')
+	gvcf_dir = os.path.join(output_dir, 'GVCF')
+	gvcfr_dir = os.path.join(output_dir, 'GVCF_recal')
+	cov_dir = os.path.join(output_dir, 'Coverage')
+	table_dir = os.path.join(output_dir, 'Table')
+
+	previous_files = [bam_dir, vcf_dir, gvcf_dir, gvcfr_dir]
+
+	# Check how many folder exist
+	file_exist = sum([os.path.exists(x) for x in previous_files]) # True = 1, False = 0
+
+	# Handle reanalysis: First time; reanalysis or reanalysis with aditional samples
+	if file_exist > 0: # Already analysed
+
+		samples_analyzed = os.listdir(bam_dir)
+		samples_analyzed = len([x for x in samples_analyzed if '.bai' not in x and 'bqsr' in x])
+
+		samples_fastq = os.listdir(output_dir)
+		samples_fastq = len([x for x in samples_fastq if x.endswith('fastq.gz')])
+
+		if samples_analyzed >= samples_fastq:
+			logger.info(MAGENTA + '\nPrevious analysis detected, no new sequences added\n' + END_FORMATTING)
+
+		else:
+			logger.info(MAGENTA + '\nPrevious analysis detected, new sequences added\n' + END_FORMATTING)
+			for root, _, files in os.walk(output_dir):
+				if root == gvcf_dir or root == gvcfr_dir or root == vcfr_dir:
+					for name in files:
+						filename = os.path.join(root, name)
+						if (('GVCF_recal' in filename) or ('/VCF_recal' in filename)) and 'cohort' in filename and samples_analyzed < 100:
+							os.remove(filename)
+						elif 'cohort' in filename and '/GVCF/' in filename:
+							os.remove(filename)
+				elif root == vcf_dir or root == table_dir:
+					for name in files:
+						filename = os.path.join(root, name)
+						if 'cohort' in filename or filename.endswith('.bed') or filename.endswith('.tab'):
+							os.remove(filename)
+				elif root == cov_dir:
+					for name in files:
+						filename = os.path.join(root, name)
+						if 'coverage.tab' in filename:
+							os.remove(filename)
+						if 'poorly_covered.bed' in filename and samples_analyzed < 100:
+							os.remove(filename)
 
 

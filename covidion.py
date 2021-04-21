@@ -15,7 +15,7 @@ import datetime
 
 # Local application imports
 
-from misc_ion import check_create_dir, check_file_exists, check_remove_file, execute_subprocess
+from misc_ion import check_create_dir, check_file_exists, check_remove_file, execute_subprocess, check_reanalysis
 
 
 """
@@ -180,6 +180,17 @@ def main():
 
     logger.addHandler(stream_handler)
     logger.addHandler(file_handler)
+
+    logger.info('\n\n' + BLUE + BOLD + 'Starting pipeline in group: ' + group_name + END_FORMATTING)
+
+    today = str(datetime.date.today())
+
+    logger.info('Arguments:')
+    logger.info(str(args))
+
+    check_reanalysis(args.output)
+
+
 
 
 
