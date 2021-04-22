@@ -11,6 +11,7 @@ import logging
 import argparse
 import subprocess
 import datetime
+import glob2
 
 
 # Local application imports

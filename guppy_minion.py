@@ -7,6 +7,7 @@ import argparse
 import sys
 import subprocess
 import datetime
+import glob2
 
 
 logger = logging.getLogger()
@@ -52,3 +53,81 @@ def get_arguments():
 	return arguments
 
 
+def check_list_exists(file_name):
+	'''
+	Check file exist and is not 0Kb, if not program exit.
+	'''
+
+	file_info = os.stat(file_name) # Retrieve the file into to check if has size > 0
+
+	if not os.path.isfile(file_name) or file_info.st_size == 0:
+		logger.info(RED + BOLD + 'File: %s not found or empty\n' % file_name + END_FORMATTING)
+		sys.exit(1)
+	return os.path.isfile(file_name)
+
+
+def check_create_dir(path):
+	# exists = os.path.isfile(path)
+	# exists = os.path.isdir(path)
+
+	if os.path.exists(path):
+		pass
+	else:
+		os.mkdir(path)
+
+
+def basecalling_ion(fast5):
+
+
+
+
+
+
+if __name__ = '__main__':
+	
+	args = get_arguments()
+
+	output_dir = os.path.abspath(args.output)
+	group_name = output_dir.split('/')[-1]
+	check_create_dir(output_dir)
+
+	# Logging
+	# Create log file with date and time
+
+	right_now = str(datetime.datetime.now())
+	right_now_full = '_'.join(right_now.split(' '))
+	log_filename = group_name + '_' + right_now_full + '.log'
+	log_folder = os.path.join(output_dir, 'Logs')
+	check_create_dir(log_folder)
+	log_full_path = os.path.join(log_folder, log_filename)
+
+	logger = logging.getLogger()
+	logger.setLevel(logging.DEBUG)
+
+	formatter = logging.Formatter('%(asctime)s:%(message)s')
+
+	file_handler = logging.FileHandler(log_full_path)
+	file_handler.setLevel(logging.DEBUG)
+	file_handler.setFormatter(formatter)
+
+	stream_handler = logging.StreamHandler()
+	stream_handler.setLevel(logging.INFO)
+	# stream_handler.setFormatter(formatter)
+
+	logger.addHandler(stream_handler)
+	logger.addHandler(file_handler)
+
+	logger.info('############### Start processing fast5 files ###############')
+	logger.info(args)
+
+	
+	# Declare folders created in pipeline and key files
+
+	out_basecalling_dir = os.path.join(output, 'Basecalling')
+	check_create_dir(out_basecalling_dir)
+	out_barcoding_dir = os.path.join(output, 'Barcoding')
+	check_create_dir(out_barcoding_dir)
+	out_samples_dir = os.path.join(output, 'Samples_Fastq')
+	check_create_dir(out_samples_dir)
+
+		# in_fast5 = glob2.glob(input_dir + '*fast5')
