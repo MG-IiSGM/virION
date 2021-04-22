@@ -111,6 +111,8 @@ def main():
 
         guppy_group.add_argument('--barcode_kits', type = str, required = False, help = 'Kit of barcodes used')
 
+        guppy_group.add_argument('--num_callers', type = int, dest = 'num_callers', required = False, default = 10, help = 'Number of parallel basecallers')
+
 
         annot_group = parser.add_argument_group('Annotation', 'Parameters for variant annotation')
 
@@ -137,7 +139,6 @@ def main():
         params_group.add_argument('-t', '--threads', type = int, dest = 'threads', required = False, default = 30, help = 'Threads to use (30 threads by default)')
 
         params_group.add_argument('-m', '--memory', type = int, dest = 'Memory', required = False, default = 64, help = 'Max memory to use')
-
 
         arguments = parser.parse_args()
 

@@ -47,6 +47,8 @@ def get_arguments():
 
 	parser.add_argument('-t', '--threads', type = int, dest = 'threads', required = False, default = 30, help = 'Threads to use (30 threads by default)')
 
+	parser.add_argument('--num_callers', type = int, dest = 'num_callers', required = False, default = 10, help = 'Number of parallel basecallers')
+
 
 	arguments = parser.parse_args()
 
@@ -82,8 +84,7 @@ def basecalling_ion(fast5):
 
 
 
-
-if __name__ = '__main__':
+if __name__ == '__main__':
 	
 	args = get_arguments()
 
@@ -130,4 +131,3 @@ if __name__ = '__main__':
 	out_samples_dir = os.path.join(output, 'Samples_Fastq')
 	check_create_dir(out_samples_dir)
 
-		# in_fast5 = glob2.glob(input_dir + '*fast5')
