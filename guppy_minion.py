@@ -43,7 +43,7 @@ def get_arguments():
 
 	parser.add_argument('-ar', '--arrangements_files', type = str, default = 'barcode_arrs_nb96.cfg', required = True, help = 'REQUIRED. Config of the barcodes used')
 
-	parser.add_argument('--barcode_kits', type = str, required = False, help = 'Kit of barcodes used')
+	parser.add_argument('--barcode_kits', type = str, required = False, default = 'EXP-NBD196', help = 'Kit of barcodes used')
 
 	parser.add_argument('-t', '--threads', type = int, dest = 'threads', required = False, default = 30, help = 'Threads to use (30 threads by default)')
 
@@ -106,7 +106,7 @@ def execute_subprocess(cmd, isShell = False):
 		sys.exit(RED + BOLD + "Failed to execute program '%s': %s" % (prog, str(e)) + END_FORMATTING)
 
 
-def basecalling_ion(input_dir, output, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 10, threads = 30, chunks = 2048):
+def basecalling_ion(input_dir, output, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 10, chunks = 2048, threads = 30):
 	
     # -i: Path to input fast5 files
 	# -s: Path to save fastq files
@@ -121,6 +121,22 @@ def basecalling_ion(input_dir, output, config = 'dna_r9.4.1_450bps_fast.cfg', ca
 
     execute_subprocess(cmd, isShell = False)
 
+
+def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_ends = False, barcode_kits = 'EXP-NBD196', arrangements_files = 'barcode_arrs_nb96.cfg', threads = 30):
+
+	if require_barcodes_both_ends:
+		logger.debug('Barcodes are being used at both ends')
+		logger.info(GREEN + BOLD + 'Barcodes are being used at both ends')
+		require_barcodes_both_ends = "--require_barcodes_both_ends"
+		# cmd.append("--require_barcodes_both_ends")
+	else:
+		logger.debug('Barcodes are being used on at least 1 of the ends')
+		logger.info(YELLOW + BOLD + 'Barcodes are being used on at least 1 of the ends')
+		require_barcodes_both_ends = ""
+
+    cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '-t', str(threads), '--fastq_out', '--compress_fastq', '--barcode_kits', barcode_kits, '--arrangements_files', arrangements_files]
+
+    execute_subprocess(cmd, isShell = False)
 
 
 
