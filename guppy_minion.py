@@ -78,8 +78,48 @@ def check_create_dir(path):
 		os.mkdir(path)
 
 
-def basecalling_ion(fast5):
+def execute_subprocess(cmd, isShell = False):
+	"""
+    https://crashcourse.housegordon.org/python-subprocess.html
+    https://docs.python.org/3/library/subprocess.html 
+    Execute and handle errors with subprocess, outputting stderr instead of the subprocess CalledProcessError
+    """
+	logger.debug('')
+	logger.debug(cmd)
 
+	if cmd[0] == 'samtools' or cmd[0] == 'bwa':
+		prog = ' '.join(cmd[0:2])
+		param = cmd [3:]
+	else:
+		prog = cmd[0]
+		param = cmd[1:]
+
+	try:
+		command = subprocess.run(cmd, shell = isShell, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		if command.returncode == 0:
+			logger.debug(GREEN + DIM + 'Program %s successfully executed' % prog + END_FORMATTING)
+		else:
+			logger.info(RED + BOLD + 'Command %s FAILED\n' % prog + END_FORMATTING + BOLD + 'with parameters: ' + END_FORMATTING + ' '.join(param) + '\n' + BOLD + 'EXIT-CODE: %d\n' % command.returncode + 'ERROR:\n' + END_FORMATTING + command.stderr.decode().strip())
+		logger.debug(command.stdout)
+		logger.debug(command.stderr.decode().strip())
+	except OSError as e:
+		sys.exit(RED + BOLD + "Failed to execute program '%s': %s" % (prog, str(e)) + END_FORMATTING)
+
+
+def basecalling_ion(input_dir, output, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 10, threads = 30, chunks = 2048):
+	
+    # -i: Path to input fast5 files
+	# -s: Path to save fastq files
+	# -c: Config file to use
+	# --num_callers: Number of parallel basecallers to Basecaller, if supplied will form part
+	# --cpu_threads_per_caller: Number of CPU worker threads per basecaller
+	# --chunks_per_runner: Maximum chunks per runner
+	# --compress_fastq: Compress fastq output files with gzip
+	# --disable_pings: Disable the transmission of telemetry
+		
+    cmd = ['guppy_basecaller', '-i', input_dir, '-s', out_basecalling_dir, '-c', config, '--num_callers', str(callers), '--cpu_threads_per_caller', str(threads), '--chunks_per_runner', str(chunks), '--compress_fastq', '--disable_pings']
+
+    execute_subprocess(cmd, isShell = False)
 
 
 
@@ -88,6 +128,7 @@ if __name__ == '__main__':
 	
 	args = get_arguments()
 
+	input_dir = os.path.abspath(args.input)
 	output_dir = os.path.abspath(args.output)
 	group_name = output_dir.split('/')[-1]
 	check_create_dir(output_dir)
@@ -124,10 +165,13 @@ if __name__ == '__main__':
 	
 	# Declare folders created in pipeline and key files
 
-	out_basecalling_dir = os.path.join(output, 'Basecalling')
+	out_basecalling_dir = os.path.join(output_dir, 'Basecalling')
 	check_create_dir(out_basecalling_dir)
-	out_barcoding_dir = os.path.join(output, 'Barcoding')
+	out_barcoding_dir = os.path.join(output_dir, 'Barcoding')
 	check_create_dir(out_barcoding_dir)
-	out_samples_dir = os.path.join(output, 'Samples_Fastq')
+	out_samples_dir = os.path.join(output_dir, 'Samples_Fastq')
 	check_create_dir(out_samples_dir)
+
+
+	############### Start pipeline ###############
 
