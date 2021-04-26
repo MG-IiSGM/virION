@@ -87,7 +87,7 @@ def execute_subprocess(cmd, isShell = False):
 	logger.debug('')
 	logger.debug(cmd)
 
-	if cmd[0] == 'samtools' or cmd[0] == 'bwa':
+	if cmd[0] == 'samtools' or cmd[0] == 'bwa' or cmd[0] == 'artic':
 		prog = ' '.join(cmd[0:2])
 		param = cmd [3:]
 	else:
@@ -108,21 +108,30 @@ def execute_subprocess(cmd, isShell = False):
 
 def basecalling_ion(input_dir, output, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 10, chunks = 2048, threads = 30):
 	
-    # -i: Path to input fast5 files
+	# -i: Path to input fast5 files
 	# -s: Path to save fastq files
 	# -c: Config file to use
 	# --num_callers: Number of parallel basecallers to Basecaller, if supplied will form part
 	# --cpu_threads_per_caller: Number of CPU worker threads per basecaller
 	# --chunks_per_runner: Maximum chunks per runner
 	# --compress_fastq: Compress fastq output files with gzip
-	# --disable_pings: Disable the transmission of telemetry
 		
-    cmd = ['guppy_basecaller', '-i', input_dir, '-s', out_basecalling_dir, '-c', config, '--num_callers', str(callers), '--cpu_threads_per_caller', str(threads), '--chunks_per_runner', str(chunks), '--compress_fastq', '--disable_pings']
+    cmd = ['guppy_basecaller', '-i', input_dir, '-s', out_basecalling_dir, '-c', config, '--num_callers', str(callers), '--cpu_threads_per_caller', str(threads), '--chunks_per_runner', str(chunks), '--compress_fastq']
 
     execute_subprocess(cmd, isShell = False)
 
 
 def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_ends = False, barcode_kits = 'EXP-NBD196', arrangements_files = 'barcode_arrs_nb96.cfg', threads = 30):
+
+	# -i: Path to input files
+	# -r: Search for input file recursively
+	# -s: Path to save files
+	# -t: Number of worker threads
+	# --fastq_out: Output Fastq files
+	# --compress_fastq: Compress fastq output files with gzip
+	# --barcode_kits: Space separated list of barcoding kit(s) or expansion kit(s) to detect against. Must be in double quotes
+	# --arrangements_files: Files containing arrangements
+	# --require_barcodes_both_ends: Reads will only be classified if there is a barcode above the min_score at both ends of the read
 
 	if require_barcodes_both_ends:
 		logger.debug('Barcodes are being used at both ends')
