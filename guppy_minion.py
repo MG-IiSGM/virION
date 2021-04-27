@@ -41,7 +41,7 @@ def get_arguments():
 
 	parser.add_argument('-b', '--require_barcodes_both_ends', required = False, action = 'store_true', help = 'Require barcodes at both ends. By default it only requires the barcode at one end for the sequences identification')
 
-	parser.add_argument('-ar', '--arrangements_files', type = str, default = 'barcode_arrs_nb96.cfg', required = True, help = 'REQUIRED. Config of the barcodes used')
+	parser.add_argument('-ar', '--arrangements_files', type = str, required = True, help = 'REQUIRED. Config of the barcodes used')
 
 	parser.add_argument('--barcode_kits', type = str, required = False, default = 'EXP-NBD196', help = 'Kit of barcodes used')
 
@@ -78,7 +78,7 @@ def check_create_dir(path):
 		os.mkdir(path)
 
 
-def execute_subprocess(cmd, isShell = False):
+def execute_subprocess(cmd, isShell = False, isInfo = False):
 	"""
     https://crashcourse.housegordon.org/python-subprocess.html
     https://docs.python.org/3/library/subprocess.html 
@@ -100,7 +100,11 @@ def execute_subprocess(cmd, isShell = False):
 			logger.debug(GREEN + DIM + 'Program %s successfully executed' % prog + END_FORMATTING)
 		else:
 			logger.info(RED + BOLD + 'Command %s FAILED\n' % prog + END_FORMATTING + BOLD + 'with parameters: ' + END_FORMATTING + ' '.join(param) + '\n' + BOLD + 'EXIT-CODE: %d\n' % command.returncode + 'ERROR:\n' + END_FORMATTING + command.stderr.decode().strip())
-		logger.debug(command.stdout)
+
+		if isInfo:
+			logger.info(command.stdout)
+		else:
+			logger.debug(command.stdout)
 		logger.debug(command.stderr.decode().strip())
 	except OSError as e:
 		sys.exit(RED + BOLD + "Failed to execute program '%s': %s" % (prog, str(e)) + END_FORMATTING)
@@ -118,7 +122,8 @@ def basecalling_ion(input_dir, output, config = 'dna_r9.4.1_450bps_fast.cfg', ca
 		
     cmd = ['guppy_basecaller', '-i', input_dir, '-s', out_basecalling_dir, '-c', config, '--num_callers', str(callers), '--cpu_threads_per_caller', str(threads), '--chunks_per_runner', str(chunks), '--compress_fastq']
 
-    execute_subprocess(cmd, isShell = False)
+	# print(cmd)
+    execute_subprocess(cmd, isShell = False, isInfo = True)
 
 
 def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_ends = False, barcode_kits = 'EXP-NBD196', arrangements_files = 'barcode_arrs_nb96.cfg', threads = 30):
@@ -134,18 +139,38 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
 	# --require_barcodes_both_ends: Reads will only be classified if there is a barcode above the min_score at both ends of the read
 
 	if require_barcodes_both_ends:
-		logger.debug('Barcodes are being used at both ends')
 		logger.info(GREEN + BOLD + 'Barcodes are being used at both ends')
 		require_barcodes_both_ends = "--require_barcodes_both_ends"
 		# cmd.append("--require_barcodes_both_ends")
 	else:
-		logger.debug('Barcodes are being used on at least 1 of the ends')
 		logger.info(YELLOW + BOLD + 'Barcodes are being used on at least 1 of the ends')
 		require_barcodes_both_ends = ""
 
-    cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '-t', str(threads), '--fastq_out', '--compress_fastq', '--barcode_kits', barcode_kits, '--arrangements_files', arrangements_files]
+	cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '-t', str(threads), '--fastq_out', '--compress_fastq', '--barcode_kits', barcode_kits, '--arrangements_files', arrangements_files]
 
-    execute_subprocess(cmd, isShell = False)
+	# print(cmd)
+	execute_subprocess(cmd, isShell = False)
+
+
+def read_filtering(out_barcoding_dir, out_samples_dir, summary, min_length = 270, max_length = 500):
+    
+	# --directory:
+	# --prefix:
+	# --min-length:
+	# --max-length:
+	# --output:
+
+	with open(summary, 'r') as f:
+		for line in f:
+			barcode = line.split('\t')[0].strip()
+			sample = line.split('\t')[1].strip()
+			output_samples = os.path.join(out_samples_dir, sample + '.fastq.gz')
+			# print(output_samples)
+    
+			cmd = ['artic', 'guppyplex', '--directory', barcode, '--prefix', sample, '--min-length', min_length, '--max-length', max_length, '--output', output_samples]
+    
+			# print(cmd)
+			execute_subprocess(cmd, isShell = False, isInfo = True)
 
 
 
