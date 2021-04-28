@@ -105,12 +105,12 @@ def execute_subprocess(cmd, isShell = False, isInfo = False):
 			logger.debug(command.stdout)
 
 		logger.debug(command.stderr.decode().strip())
-		
+
 	except OSError as e:
 		sys.exit(RED + BOLD + "Failed to execute program '%s': %s" % (prog, str(e)) + END_FORMATTING)
 
 
-def basecalling_ion(input_dir, output, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 10, chunks = 2048, threads = 30):
+def basecalling_ion(input_dir, output, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 100, chunks = 2048, threads = 30):
 	
 	# -i: Path to input fast5 files
 	# -s: Path to save fastq files
@@ -163,7 +163,7 @@ def read_filtering(out_barcoding_dir, out_samples_dir, summary, min_length = 270
 		for line in f:
 			barcode = os.path.join(out_barcoding_dir, line.split('\t')[0].strip())
 			sample = line.split('\t')[1].strip()
-			output_samples = os.path.join(out_samples_dir, sample + '.fastq.gz')
+			output_samples = os.path.join(out_samples_dir, sample + '.fastq')
 			# print(output_samples)
     
 			cmd = ['artic', 'guppyplex', '--directory', barcode, '--prefix', sample, '--min-length', str(min_length), '--max-length', str(max_length), '--output', output_samples]
