@@ -88,8 +88,14 @@ def execute_subprocess(cmd, isShell = False):
 			logger.debug(GREEN + DIM + 'Program %s successfully executed' % prog + END_FORMATTING)
 		else:
 			logger.info(RED + BOLD + 'Command %s FAILED\n' % prog + END_FORMATTING + BOLD + 'with parameters: ' + END_FORMATTING + ' '.join(param) + '\n' + BOLD + 'EXIT-CODE: %d\n' % command.returncode + 'ERROR:\n' + END_FORMATTING + command.stderr.decode().strip())
-		logger.debug(command.stdout)
+		
+		if isInfo:
+			logger.info(command.stdout)
+		else:
+			logger.debug(command.stdout)
+
 		logger.debug(command.stderr.decode().strip())
+		
 	except OSError as e:
 		sys.exit(RED + BOLD + "Failed to execute program '%s': %s" % (prog, str(e)) + END_FORMATTING)
 

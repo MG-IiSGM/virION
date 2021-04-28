@@ -109,8 +109,6 @@ def main():
         
         guppy_group.add_argument('--barcode_kits', type = str, required = False, default = 'EXP-NBD196', help = 'Kit of barcodes used')
 
-        guppy_group.add_argument('-ar', '--arrangements_files', type = str, required = True, help = 'REQUIRED. Config of the barcodes used')
-
         guppy_group.add_argument('--num_callers', type = int, dest = 'num_callers', required = False, default = 10, help = 'Number of parallel basecallers')
 
 
