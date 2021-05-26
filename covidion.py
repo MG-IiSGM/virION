@@ -23,7 +23,6 @@ from misc_ion import check_create_dir, check_file_exists, check_remove_file, exe
 =============================================================
 HEADER
 =============================================================
-
 Institution: IiSGM
 Author: Sergio Buenestado-Serrano (sergio.buenestado@gmail.com), Pedro J. Sola (pedroscampoy@gmail.com)
 Version = 0
