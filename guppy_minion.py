@@ -9,6 +9,10 @@ import subprocess
 import datetime
 import glob2
 
+# Local application imports
+
+from misc import check_create_dir, check_file_exists, extract_read_list, extract_sample_list, execute_subprocess
+
 
 logger = logging.getLogger()
 
@@ -53,64 +57,6 @@ def get_arguments():
     return arguments
 
 
-def check_list_exists(file_name):
-    """
-    Check file exist and is not 0Kb, if not program exit.
-    """
-
-    file_info = os.stat(file_name) # Retrieve the file into to check if has size > 0
-
-    if not os.path.isfile(file_name) or file_info.st_size == 0:
-        logger.info(RED + BOLD + 'File: %s not found or empty\n' % file_name + END_FORMATTING)
-        sys.exit(1)
-    return os.path.isfile(file_name)
-
-
-def check_create_dir(path):
-    # exists = os.path.isfile(path)
-    # exists = os.path.isdir(path)
-
-    if os.path.exists(path):
-        pass
-    else:
-        os.mkdir(path)
-
-
-def execute_subprocess(cmd, isShell = False, isInfo = False):
-    """
-    https://crashcourse.housegordon.org/python-subprocess.html
-    https://docs.python.org/3/library/subprocess.html 
-    Execute and handle errors with subprocess, outputting stderr instead of the subprocess CalledProcessError
-    """
-
-    logger.debug('')
-    logger.debug(cmd)
-
-    if cmd[0] == 'samtools' or cmd[0] == 'bwa' or cmd[0] == 'artic':
-        prog = ' '.join(cmd[0:2])
-        param = cmd [3:]
-    else:
-        prog = cmd[0]
-        param = cmd[1:]
-
-    try:
-        command = subprocess.run(cmd, shell = isShell, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        if command.returncode == 0:
-            logger.debug(GREEN + DIM + 'Program %s successfully executed' % prog + END_FORMATTING)
-        else:
-            logger.info(RED + BOLD + 'Command %s FAILED\n' % prog + END_FORMATTING + BOLD + 'with parameters: ' + END_FORMATTING + ' '.join(param) + '\n' + BOLD + 'EXIT-CODE: %d\n' % command.returncode + 'ERROR:\n' + END_FORMATTING + command.stderr.decode().strip())
-
-        if isInfo:
-            logger.info(command.stdout)
-        else:
-            logger.debug(command.stdout)
-
-        logger.debug(command.stderr.decode().strip())
-
-    except OSError as e:
-        sys.exit(RED + BOLD + "Failed to execute program '%s': %s" % (prog, str(e)) + END_FORMATTING)
-
-
 def basecalling_ion(input_dir, output, config = 'dna_r9.4.1_450bps_hac.cfg', callers = 100, chunks = 2048, threads = 30):
     
     # -i: Path to input fast5 files
@@ -124,7 +70,7 @@ def basecalling_ion(input_dir, output, config = 'dna_r9.4.1_450bps_hac.cfg', cal
     cmd = ['guppy_basecaller', '-i', input_dir, '-s', out_basecalling_dir, '-c', config, '--num_callers', str(callers), '--chunks_per_runner', str(chunks), '--cpu_threads_per_caller', str(threads), '--compress_fastq']
 
     print(cmd)
-    # execute_subprocess(cmd, isShell = False, isInfo = True)
+    execute_subprocess(cmd, isShell = False, isInfo = True)
 
 
 def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_ends = False, barcode_kits = 'EXP-NBD196', threads = 30):
@@ -149,7 +95,7 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
         require_barcodes_both_ends = ""
 
     print(cmd)
-    # execute_subprocess(cmd, isShell = False, isInfo = True)
+    execute_subprocess(cmd, isShell = False, isInfo = True)
 
 
 def read_filtering(out_barcoding_dir, out_samples_dir, summary, min_length = 270, max_length = 550):
@@ -170,7 +116,7 @@ def read_filtering(out_barcoding_dir, out_samples_dir, summary, min_length = 270
             cmd = ['artic', 'guppyplex', '--directory', barcode, '--prefix', sample, '--min-length', str(min_length), '--max-length', str(max_length), '--output', output_samples]
     
             print(cmd)
-            # execute_subprocess(cmd, isShell = False, isInfo = True)
+            execute_subprocess(cmd, isShell = False, isInfo = True)
 
 
 
@@ -212,7 +158,16 @@ if __name__ == '__main__':
     logger.info('############### Start processing fast5 files ###############')
     logger.info(args)
 
+
+    logger.info("Arguments:")
+    logger.info(str(args))
+
+
+    # Obtain all fast5 files from folder
+
     
+
+
     # Declare folders created in pipeline and key files
 
     out_basecalling_dir = os.path.join(output_dir, 'Basecalling')
@@ -224,4 +179,10 @@ if __name__ == '__main__':
 
 
     ############### Start pipeline ###############
+
+
+
+
+
+
 
