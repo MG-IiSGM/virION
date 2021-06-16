@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 
 import os
 import re
@@ -7,11 +7,10 @@ import argparse
 import sys
 import subprocess
 import datetime
-import glob2
 
 # Local application imports
 
-from misc import check_create_dir, check_file_exists, extract_read_list, extract_sample_list, execute_subprocess
+from misc_ion import check_create_dir, check_file_exists, extract_read_list, extract_sample_list, execute_subprocess
 
 
 logger = logging.getLogger()
@@ -41,7 +40,7 @@ def get_arguments():
 
     parser.add_argument('-s', '--samples', metavar = 'Samples', type = str, required = False, help = 'Sample list for conversion from barcode to samples ID')
 
-    parser.add_argument('-c', '--config', type = str, default = 'dna_r9.4.1_450bps_hac.cfg', required = True, help = 'REQUIRED. Config parameter for guppy_basecalling. High-accuracy mode basecalling by default')
+    parser.add_argument('-c', '--config', type = str, default = 'dna_r9.4.1_450bps_fast.cfg', required = False, help = 'REQUIRED. Config parameter for guppy_basecalling. High-accuracy mode basecalling by default')
 
     parser.add_argument('-b', '--require_barcodes_both_ends', required = False, action = 'store_true', help = 'Require barcodes at both ends. By default it only requires the barcode at one end for the sequences identification')
 
@@ -57,8 +56,8 @@ def get_arguments():
     return arguments
 
 
-def basecalling_ion(input_dir, output, config = 'dna_r9.4.1_450bps_hac.cfg', callers = 100, chunks = 2048, threads = 30):
-    
+def basecalling_ion(input_dir, out_basecalling_dir, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 10, chunks = 2048, threads = 30):
+
     # -i: Path to input fast5 files
     # -s: Path to save fastq files
     # -c: Config file to use > https://community.nanoporetech.com/posts/guppy-v5-0-7-release-note (fast // hac // sup)
@@ -66,11 +65,11 @@ def basecalling_ion(input_dir, output, config = 'dna_r9.4.1_450bps_hac.cfg', cal
     # --cpu_threads_per_caller: Number of CPU worker threads per basecaller
     # --chunks_per_runner: Maximum chunks per runner
     # --compress_fastq: Compress fastq output files with gzip
-        
+
     cmd = ['guppy_basecaller', '-i', input_dir, '-s', out_basecalling_dir, '-c', config, '--num_callers', str(callers), '--chunks_per_runner', str(chunks), '--cpu_threads_per_caller', str(threads), '--compress_fastq']
 
     print(cmd)
-    execute_subprocess(cmd, isShell = False, isInfo = True)
+    execute_subprocess(cmd, isShell = False)
 
 
 def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_ends = False, barcode_kits = 'EXP-NBD196', threads = 30):
@@ -112,19 +111,19 @@ def read_filtering(out_barcoding_dir, out_samples_dir, summary, min_length = 270
             sample = line.split('\t')[1].strip()
             output_samples = os.path.join(out_samples_dir, sample + '.fastq')
             # print(output_samples)
-    
+
             cmd = ['artic', 'guppyplex', '--directory', barcode, '--prefix', sample, '--min-length', str(min_length), '--max-length', str(max_length), '--output', output_samples]
-    
+
             print(cmd)
             execute_subprocess(cmd, isShell = False, isInfo = True)
 
 
 
 if __name__ == '__main__':
-    
+
     args = get_arguments()
 
-    input_dir = os.path.abspath(args.input)
+    input_dir = os.path.abspath(args.input_dir)
     output_dir = os.path.abspath(args.output)
     group_name = output_dir.split('/')[-1]
     check_create_dir(output_dir)
@@ -155,17 +154,24 @@ if __name__ == '__main__':
     logger.addHandler(stream_handler)
     logger.addHandler(file_handler)
 
-    logger.info('############### Start processing fast5 files ###############')
+    logger.info("\n" + BLUE + '############### START PROCESSING FAST5 FILES ###############' + END_FORMATTING + "\n")
     logger.info(args)
-
-
-    logger.info("Arguments:")
-    logger.info(str(args))
 
 
     # Obtain all fast5 files from folder
 
-    
+    fast5 = extract_read_list(args.input_dir)
+
+
+    # Check how many files will be analysed
+
+    sample_list = []
+
+    for sample in fast5:
+        sample = extract_sample_list(sample)
+        sample_list.append(sample)
+
+    logger.info("\n" + CYAN + "{} Samples will be analysed: {}".format(len(sample_list), ",".join(sample_list)) + END_FORMATTING)
 
 
     # Declare folders created in pipeline and key files
@@ -176,13 +182,17 @@ if __name__ == '__main__':
     check_create_dir(out_barcoding_dir)
     out_samples_dir = os.path.join(output_dir, 'Samples_Fastq')
     check_create_dir(out_samples_dir)
+    out_fastqc_dir = os.path.join(output_dir, 'Quality')
+    check_create_dir(out_fastqc_dir)
 
 
     ############### Start pipeline ###############
 
+    logger.info("\n\n" + GREEN + "STARTING BASECALLING" + END_FORMATTING + "\n")
+    basecalling_ion(input_dir, out_basecalling_dir, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 10, chunks = 2048, threads = 30)
 
 
 
 
-
-
+    logger.info("\n\n" + MAGENTA + BOLD +
+                "#####END OF PIPELINE#####" + END_FORMATTING + "\n")

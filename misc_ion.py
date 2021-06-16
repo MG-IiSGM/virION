@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 import sys
 import re
@@ -40,6 +42,7 @@ DIM = '\033[2m'
 def check_create_dir(path):
     # exists = os.path.isfile(path)
     # exists = os.path.isdir(path)
+
     if os.path.exists(path):
         pass
     else:
@@ -50,6 +53,7 @@ def check_file_exists(file_name):
     """
     Check file exist and is not 0Kb, if not program exit.
     """
+
     file_info = os.stat(file_name) # Retrieve the file into to check if has size > 0
 
     if not os.path.isfile(file_name) or file_info.st_size == 0:
@@ -78,9 +82,6 @@ def extract_read_list(input_dir):
                 is_files = re.match(r".*\.f(ast)*[aq5](\.gz)*", name)
                 if is_files:
                     all_files.append(filename)
-                else:
-                    logger.info(RED + "Error, file does not exist" + END_FORMATTING)
-                    sys.exit(1)
 
     all_files = sorted(all_files)
 
@@ -102,6 +103,7 @@ def execute_subprocess(cmd, isShell = False, isInfo = False):
     https://docs.python.org/3/library/subprocess.html 
     Execute and handle errors with subprocess, outputting stderr instead of the subprocess CalledProcessError
     """
+
     logger.debug('')
     logger.debug(cmd)
 
@@ -118,14 +120,14 @@ def execute_subprocess(cmd, isShell = False, isInfo = False):
             logger.debug(GREEN + DIM + 'Program %s successfully executed' % prog + END_FORMATTING)
         else:
             logger.info(RED + BOLD + 'Command %s FAILED\n' % prog + END_FORMATTING + BOLD + 'with parameters: ' + END_FORMATTING + ' '.join(param) + '\n' + BOLD + 'EXIT-CODE: %d\n' % command.returncode + 'ERROR:\n' + END_FORMATTING + command.stderr.decode().strip())
-        
+
         if isInfo:
             logger.info(command.stdout)
         else:
             logger.debug(command.stdout)
 
         logger.debug(command.stderr.decode().strip())
-        
+
     except OSError as e:
         sys.exit(RED + BOLD + "Failed to execute program '%s': %s" % (prog, str(e)) + END_FORMATTING)
 
