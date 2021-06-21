@@ -44,7 +44,7 @@ def get_arguments():
 
     parser.add_argument('-b', '--require_barcodes_both_ends', required = False, action = 'store_true', help = 'Require barcodes at both ends. By default it only requires the barcode at one end for the sequences identification')
 
-    parser.add_argument('--barcode_kits', type = str, required = False, default = 'EXP-NBD196', help = 'Kit of barcodes used')
+    parser.add_argument('--barcode_kit', type = str, required = False, default = 'EXP-NBD196', help = 'Kit of barcodes used')
 
     parser.add_argument('-t', '--threads', type = int, dest = 'threads', required = False, default = 30, help = 'Threads to use (30 threads by default)')
 
@@ -56,7 +56,7 @@ def get_arguments():
     return arguments
 
 
-def basecalling_ion(input_dir, out_basecalling_dir, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 10, chunks = 2048, threads = 30):
+def basecalling_ion(input_dir, out_basecalling_dir, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 3, chunks = 2048, threads = 10):
 
     # -i: Path to input fast5 files
     # -s: Path to save fastq files
@@ -72,7 +72,7 @@ def basecalling_ion(input_dir, out_basecalling_dir, config = 'dna_r9.4.1_450bps_
     execute_subprocess(cmd, isShell = False)
 
 
-def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_ends = False, barcode_kits = 'EXP-NBD196', threads = 30):
+def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_ends = False, barcode_kit = 'EXP-NBD196', threads = 30):
 
     # -i: Path to input files
     # -r: Search for input file recursively
@@ -83,18 +83,17 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
     # --barcode_kits: Space separated list of barcoding kit(s) or expansion kit(s) to detect against. Must be in double quotes
     # --require_barcodes_both_ends: Reads will only be classified if there is a barcode above the min_score at both ends of the read
 
-    cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '--barcode_kits', barcode_kits, '-t', str(threads), '--fastq_out', '--compress_fastq']
-
     if require_barcodes_both_ends:
         logger.info(GREEN + BOLD + 'Barcodes are being used at both ends')
         require_barcodes_both_ends = "--require_barcodes_both_ends"
-        cmd.append("--require_barcodes_both_ends")
     else:
         logger.info(YELLOW + BOLD + 'Barcodes are being used on at least 1 of the ends')
         require_barcodes_both_ends = ""
 
+    cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '--barcode_kit', barcode_kit, '-t', str(threads), '--fastq_out', '--compress_fastq']
+
     print(cmd)
-    execute_subprocess(cmd, isShell = False, isInfo = True)
+    execute_subprocess(cmd, isShell = False)
 
 
 def read_filtering(out_barcoding_dir, out_samples_dir, summary, min_length = 270, max_length = 550):
@@ -188,9 +187,16 @@ if __name__ == '__main__':
 
     ############### Start pipeline ###############
 
-    logger.info("\n\n" + GREEN + "STARTING BASECALLING" + END_FORMATTING + "\n")
-    basecalling_ion(input_dir, out_basecalling_dir, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 10, chunks = 2048, threads = 30)
+    # Basecalling
+    #logger.info("\n\n" + GREEN + "STARTING BASECALLING" + END_FORMATTING + "\n")
 
+    #basecalling_ion(input_dir, out_basecalling_dir, config = args.config, callers = args.num_callers, chunks = 2048, threads = args.threads)
+
+
+    # Barcoding
+    #logger.info("\n\n" + GREEN + "STARTING BARCODING/DEMULTIPLEX" + END_FORMATTING + "\n")
+
+    #barcoding_ion(out_basecalling_dir, out_barcoding_dir, barcode_kit = args.barcode_kit, threads = args.threads, require_barcodes_both_ends = args.require_barcodes_both_ends)
 
 
 
