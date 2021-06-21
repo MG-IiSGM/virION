@@ -105,7 +105,7 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
         logger.info(GREEN + BOLD + 'Barcodes are being used at both ends')
         require_barcodes_both_ends = "--require_barcodes_both_ends"
     else:
-        logger.info(YELLOW + BOLD + 'Barcodes are being used on at least 1 of the ends')
+        logger.info(YELLOW + DIM + BOLD + 'Barcodes are being used on at least 1 of the ends')
         require_barcodes_both_ends = ""
 
     cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '--barcode_kit', barcode_kit, '-t', str(threads), '--fastq_out', '--compress_fastq']
@@ -246,9 +246,9 @@ if __name__ == '__main__':
         out_qc_raw_file_fastq = os.path.join(out_fastqc_dir, out_qc_raw_fastq)
 
         if os.path.isfile(out_qc_raw_file_fastq):
-            logger.info('\n' + YELLOW + DIM + out_qc_raw_file_fastq + ' EXIST\nOmmiting QC for sample ' + sample_base + END_FORMATTING)
+            logger.info(YELLOW + DIM + out_qc_raw_file_fastq + ' EXIST\nOmmiting QC for sample ' + sample_base + END_FORMATTING)
         else:
-            logger.info('\n' + GREEN + 'Checking quality in sample ' + sample_base + END_FORMATTING)
+            logger.info(GREEN + 'Checking quality in sample ' + sample_base + END_FORMATTING)
             fastqc_quality(sample, out_fastqc_dir, args.threads)
 
 
