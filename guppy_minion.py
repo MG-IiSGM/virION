@@ -11,10 +11,28 @@ import datetime
 # Local application imports
 
 from misc_ion import check_create_dir, check_file_exists, extract_read_list, extract_sample_list, execute_subprocess
+from preprocess_ion import fastqc_quality
 
 
 logger = logging.getLogger()
 
+"""
+=============================================================
+HEADER
+=============================================================
+Institution: IiSGM
+Author: Sergio Buenestado-Serrano (sergio.buenestado@gmail.com), Pedro J. Sola (pedroscampoy@gmail.com)
+Version = 0
+Created: 24 March 2021
+
+TODO:
+    Adapt check_reanalysis
+    Check file with multiple arguments
+    Check program is installed (dependencies)
+================================================================
+END_OF_HEADER
+================================================================
+"""
 
 END_FORMATTING = '\033[0m'
 WHITE_BG = '\033[0;30;47m'
@@ -117,7 +135,7 @@ def read_filtering(out_barcoding_dir, out_samples_dir, summary = False, min_leng
             execute_subprocess(cmd, isShell = False, isInfo = True)
 
             cmd_compress = ['bgzip', output_samples, '--threads', str(args.threads)]
-            print(cmd_compress)
+            # print(cmd_compress)
             execute_subprocess(cmd_compress, isShell = False)
 
 
@@ -192,27 +210,46 @@ if __name__ == '__main__':
     ############### Start pipeline ###############
 
     # Basecalling
-    #logger.info("\n" + GREEN + "STARTING BASECALLING" + END_FORMATTING + "\n")
 
-    #basecalling_ion(input_dir, out_basecalling_dir, config = args.config, callers = args.num_callers, chunks = 2048, threads = args.threads)
+    logger.info("\n" + GREEN + "STARTING BASECALLING" + END_FORMATTING + "\n")
+
+    basecalling_ion(input_dir, out_basecalling_dir, config = args.config, callers = args.num_callers, chunks = 2048, threads = args.threads)
 
 
     # Barcoding
-    #logger.info("\n" + GREEN + "STARTING BARCODING/DEMULTIPLEX" + END_FORMATTING + "\n")
 
-    #barcoding_ion(out_basecalling_dir, out_barcoding_dir, barcode_kit = args.barcode_kit, threads = args.threads, require_barcodes_both_ends = args.require_barcodes_both_ends)
+    logger.info("\n" + GREEN + "STARTING BARCODING/DEMULTIPLEX" + END_FORMATTING + "\n")
+
+    barcoding_ion(out_basecalling_dir, out_barcoding_dir, barcode_kit = args.barcode_kit, threads = args.threads, require_barcodes_both_ends = args.require_barcodes_both_ends)
 
 
     # Read Filtering
-    #logger.info("\n" + GREEN + "SAMPLE FILTERING" + END_FORMATTING + "\n")
 
-    #read_filtering(out_barcoding_dir, out_samples_dir, summary = args.samples)
+    logger.info("\n" + GREEN + "SAMPLE FILTERING" + END_FORMATTING + "\n")
+
+    read_filtering(out_barcoding_dir, out_samples_dir, summary = args.samples)
 
 
     # Quality Check
-    logger.info("\n" + GREEN + "QUALITY CHECK IN RAW" + END_FORMATTING + "\n")
 
-    
+    logger.info("\n" + GREEN + "QUALITY CHECK IN RAW" + END_FORMATTING)
+
+    fastq = extract_read_list(out_samples_dir)
+
+    sample_fastq = []
+
+    for sample in fastq:
+        sample_base = os.path.basename(sample)
+        sample_fastq.append(os.path.basename(sample))
+
+        out_qc_raw_fastq = ('.').join(sample.split('/')[-1].split('.')[0:-2]) + '_fastqc.html'
+        out_qc_raw_file_fastq = os.path.join(out_fastqc_dir, out_qc_raw_fastq)
+
+        if os.path.isfile(out_qc_raw_file_fastq):
+            logger.info('\n' + YELLOW + DIM + out_qc_raw_file_fastq + ' EXIST\nOmmiting QC for sample ' + sample_base + END_FORMATTING)
+        else:
+            logger.info('\n' + GREEN + 'Checking quality in sample ' + sample_base + END_FORMATTING)
+            fastqc_quality(sample, out_fastqc_dir, args.threads)
 
 
     logger.info("\n" + MAGENTA + BOLD +

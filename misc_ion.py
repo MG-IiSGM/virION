@@ -14,6 +14,23 @@ from statistics import mean
 
 logger = logging.getLogger()
 
+"""
+=============================================================
+HEADER
+=============================================================
+Institution: IiSGM
+Author: Sergio Buenestado-Serrano (sergio.buenestado@gmail.com), Pedro J. Sola (pedroscampoy@gmail.com)
+Version = 0
+Created: 24 March 2021
+
+TODO:
+    Adapt check_reanalysis
+    Check file with multiple arguments
+    Check program is installed (dependencies)
+================================================================
+END_OF_HEADER
+================================================================
+"""
 
 # Colors and formatting
 
