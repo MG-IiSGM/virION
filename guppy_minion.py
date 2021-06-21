@@ -96,7 +96,7 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
     execute_subprocess(cmd, isShell = False)
 
 
-def read_filtering(out_barcoding_dir, out_samples_dir, summary, min_length = 270, max_length = 550):
+def read_filtering(out_barcoding_dir, out_samples_dir, summary = False, min_length = 270, max_length = 550):
     
     # --directory:
     # --prefix:
@@ -113,8 +113,12 @@ def read_filtering(out_barcoding_dir, out_samples_dir, summary, min_length = 270
 
             cmd = ['artic', 'guppyplex', '--directory', barcode, '--prefix', sample, '--min-length', str(min_length), '--max-length', str(max_length), '--output', output_samples]
 
-            print(cmd)
+            # print(cmd)
             execute_subprocess(cmd, isShell = False, isInfo = True)
+
+            cmd_compress = ['bgzip', output_samples, '--threads', str(args.threads)]
+            print(cmd_compress)
+            execute_subprocess(cmd_compress, isShell = False)
 
 
 
@@ -188,17 +192,28 @@ if __name__ == '__main__':
     ############### Start pipeline ###############
 
     # Basecalling
-    #logger.info("\n\n" + GREEN + "STARTING BASECALLING" + END_FORMATTING + "\n")
+    #logger.info("\n" + GREEN + "STARTING BASECALLING" + END_FORMATTING + "\n")
 
     #basecalling_ion(input_dir, out_basecalling_dir, config = args.config, callers = args.num_callers, chunks = 2048, threads = args.threads)
 
 
     # Barcoding
-    #logger.info("\n\n" + GREEN + "STARTING BARCODING/DEMULTIPLEX" + END_FORMATTING + "\n")
+    #logger.info("\n" + GREEN + "STARTING BARCODING/DEMULTIPLEX" + END_FORMATTING + "\n")
 
     #barcoding_ion(out_basecalling_dir, out_barcoding_dir, barcode_kit = args.barcode_kit, threads = args.threads, require_barcodes_both_ends = args.require_barcodes_both_ends)
 
 
+    # Read Filtering
+    #logger.info("\n" + GREEN + "SAMPLE FILTERING" + END_FORMATTING + "\n")
 
-    logger.info("\n\n" + MAGENTA + BOLD +
+    #read_filtering(out_barcoding_dir, out_samples_dir, summary = args.samples)
+
+
+    # Quality Check
+    logger.info("\n" + GREEN + "QUALITY CHECK IN RAW" + END_FORMATTING + "\n")
+
+    
+
+
+    logger.info("\n" + MAGENTA + BOLD +
                 "#####END OF PIPELINE#####" + END_FORMATTING + "\n")

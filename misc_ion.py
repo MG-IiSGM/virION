@@ -122,9 +122,9 @@ def execute_subprocess(cmd, isShell = False, isInfo = False):
             logger.info(RED + BOLD + 'Command %s FAILED\n' % prog + END_FORMATTING + BOLD + 'with parameters: ' + END_FORMATTING + ' '.join(param) + '\n' + BOLD + 'EXIT-CODE: %d\n' % command.returncode + 'ERROR:\n' + END_FORMATTING + command.stderr.decode().strip())
 
         if isInfo:
-            logger.info(command.stdout)
+            logger.info(command.stdout.decode().strip())
         else:
-            logger.debug(command.stdout)
+            logger.debug(command.stdout.decode().strip())
 
         logger.debug(command.stderr.decode().strip())
 
