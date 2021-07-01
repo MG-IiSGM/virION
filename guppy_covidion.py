@@ -10,8 +10,8 @@ import datetime
 
 # Local application imports
 
-from misc_ion import check_create_dir, check_file_exists, extract_read_list, extract_sample_list, execute_subprocess
-from preprocess_ion import fastqc_quality
+from misc_covidion import check_create_dir, check_file_exists, extract_read_list, extract_sample_list, execute_subprocess
+from preprocess_covidion import fastqc_quality
 
 
 logger = logging.getLogger()

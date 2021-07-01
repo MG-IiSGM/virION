@@ -1,10 +1,13 @@
+#!/usr/bin/env python
+
 import os
 import sys
 import re
 import argparse
 import subprocess
 import logging
-from misc_ion import check_file_exists, check_create_dir, execute_subprocess
+
+from misc_covidion import check_file_exists, check_create_dir, execute_subprocess
 
 logger = logging.getLogger()
 

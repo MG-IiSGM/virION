@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 # Standard library imports
 import os
@@ -16,7 +16,7 @@ import glob2
 
 # Local application imports
 
-from misc_ion import check_create_dir, check_file_exists, check_remove_file, execute_subprocess, check_reanalysis
+from misc_covidion import check_create_dir, check_file_exists, check_remove_file, execute_subprocess, check_reanalysis
 
 
 """
