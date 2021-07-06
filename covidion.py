@@ -26,7 +26,7 @@ HEADER
 Institution: IiSGM
 Author: Sergio Buenestado-Serrano (sergio.buenestado@gmail.com), Pedro J. Sola (pedroscampoy@gmail.com)
 Version = 0
-Created: 24 March 2021
+Created: 21 June 2021
 
 TODO:
     Adapt check_reanalysis
@@ -93,13 +93,6 @@ def main():
         input_group.add_argument('-C', '--noclean', required = False, action = 'store_true', help = 'Clean unwanted files for standard execution')
 
 
-        quality_group = parser.add_argument_group('Quality parameters', 'Parameters for different trimming conditions')
-
-        quality_group.add_argument('-cov', '--coverage30', type = int, default = 90, required = False, help = 'Minimum percentage of coverage at 30x to clasify as uncovered (Default 90)')
-
-        quality_group.add_argument('-n', '--min_snp', type = int, required = False, default = 1, help = 'SNP number to pass quality threshold')
-
-        
         guppy_group = parser.add_argument_group('Guppy parameters', 'Parameters for Guppy basecalling and barcoding')
 
         guppy_group.add_argument('-c', '--config', type = str, default = 'dna_r9.4.1_450bps_hac.cfg', required = True, help = 'REQUIRED. Config parameter for guppy_basecalling. High-accuracy mode basecalling by default')
@@ -111,6 +104,13 @@ def main():
         guppy_group.add_argument('--num_callers', type = int, dest = 'num_callers', required = False, default = 10, help = 'Number of parallel basecallers')
 
 
+        quality_group = parser.add_argument_group('Quality parameters', 'Parameters for different trimming conditions')
+
+        quality_group.add_argument('-cov', '--coverage30', type = int, default = 90, required = False, help = 'Minimum percentage of coverage at 30x to clasify as uncovered (Default 90)')
+
+        quality_group.add_argument('-n', '--min_snp', type = int, required = False, default = 1, help = 'SNP number to pass quality threshold')
+
+
         annot_group = parser.add_argument_group('Annotation', 'Parameters for variant annotation')
 
         annot_group.add_argument('-B', '--annot_bed', type = str, default = [], required = False, action = 'append', help = 'BED file to annotate')
@@ -120,8 +120,6 @@ def main():
         annot_group.add_argument('-A', '--annot_aa', type = str, default = [], required = False, action = 'append', help = 'Aminoacid file to annotate')
 
         annot_group.add_argument('-R', '--remove_bed', type = str, default = False, required = False, help = 'BED file with positions to remove')
-
-        annot_group.add_argument('--mash_database', type = str, required = False, default = False, help = 'MASH ncbi annotation containing all species database')
 
         annot_group.add_argument('--snpeff_database', type = str, required = False, default = 'NC_045512.2', help = 'snpEFF annotation database')
 
