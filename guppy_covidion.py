@@ -68,13 +68,15 @@ def get_arguments():
 
     parser.add_argument('--num_callers', type = int, dest = 'num_callers', required = False, default = 10, help = 'Number of parallel basecallers')
 
+    parser.add_argument('--records_per_fastq', type = int, dest = 'records_per_fastq', required = False, default = 0, help = 'Maximum number of records per fastq')
+
 
     arguments = parser.parse_args()
 
     return arguments
 
 
-def basecalling_ion(input_dir, out_basecalling_dir, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 3, chunks = 2048, threads = 10):
+def basecalling_ion(input_dir, out_basecalling_dir, config = 'dna_r9.4.1_450bps_fast.cfg', callers = 3, chunks = 2048, threads = 10, records = 0):
 
     # -i: Path to input fast5 files
     # -s: Path to save fastq files
@@ -84,7 +86,7 @@ def basecalling_ion(input_dir, out_basecalling_dir, config = 'dna_r9.4.1_450bps_
     # --chunks_per_runner: Maximum chunks per runner
     # --compress_fastq: Compress fastq output files with gzip
 
-    cmd = ['guppy_basecaller', '-i', input_dir, '-s', out_basecalling_dir, '-c', config, '--num_callers', str(callers), '--chunks_per_runner', str(chunks), '--cpu_threads_per_caller', str(threads), '--compress_fastq']
+    cmd = ['guppy_basecaller', '-i', input_dir, '-s', out_basecalling_dir, '-c', config, '--num_callers', str(callers), '--chunks_per_runner', str(chunks), '--cpu_threads_per_caller', str(threads), '--records_per_fastq', str(records), '--compress_fastq']
 
     print(cmd)
     execute_subprocess(cmd, isShell = False)
@@ -100,6 +102,7 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
     # --compress_fastq: Compress fastq output files with gzip
     # --barcode_kits: Space separated list of barcoding kit(s) or expansion kit(s) to detect against. Must be in double quotes
     # --require_barcodes_both_ends: Reads will only be classified if there is a barcode above the min_score at both ends of the read
+    # --records_per_fastq: Maximum number of records per fastq file, 0 means use a single file (per worker, per run id)
 
     if require_barcodes_both_ends:
         logger.info(GREEN + BOLD + 'Barcodes are being used at both ends')
@@ -134,9 +137,9 @@ def read_filtering(out_barcoding_dir, out_samples_dir, summary = False, min_leng
             # print(cmd)
             execute_subprocess(cmd, isShell = False, isInfo = True)
 
-            cmd_compress = ['bgzip', output_samples, '--threads', str(args.threads)]
+            # cmd_compress = ['bgzip', output_samples, '--threads', str(args.threads)]
             # print(cmd_compress)
-            execute_subprocess(cmd_compress, isShell = False)
+            # execute_subprocess(cmd_compress, isShell = False)
 
 
 
@@ -213,7 +216,7 @@ if __name__ == '__main__':
 
     logger.info("\n" + GREEN + "STARTING BASECALLING" + END_FORMATTING + "\n")
 
-    basecalling_ion(input_dir, out_basecalling_dir, config = args.config, callers = args.num_callers, chunks = 2048, threads = args.threads)
+    basecalling_ion(input_dir, out_basecalling_dir, config = args.config, callers = args.num_callers, chunks = 2048, threads = args.threads, records = args.records_per_fastq)
 
 
     # Barcoding
