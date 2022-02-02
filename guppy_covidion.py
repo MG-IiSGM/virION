@@ -7,11 +7,11 @@ import argparse
 import sys
 import subprocess
 import datetime
+import gzip
 
 # Local application imports
 
 from misc_covidion import check_create_dir, check_file_exists, extract_read_list, extract_sample_list, execute_subprocess
-from preprocess_covidion import fastqc_quality
 
 
 logger = logging.getLogger()
@@ -21,7 +21,7 @@ logger = logging.getLogger()
 HEADER
 =============================================================
 Institution: IiSGM
-Author: Sergio Buenestado-Serrano (sergio.buenestado@gmail.com), Pedro J. Sola (pedroscampoy@gmail.com)
+Author: Sergio Buenestado-Serrano (sergio.buenestado@gmail.com)
 Version = 0
 Created: 24 March 2021
 
@@ -68,7 +68,7 @@ def get_arguments():
                         help='Require barcodes at both ends. By default it only requires the barcode at one end for the sequences identification')
 
     parser.add_argument('--barcode_kit', type=str, required=False,
-                        default='EXP-NBD196', help='Kit of barcodes used')
+                        default='SQK-RBK110-96', help='Kit of barcodes used [SQK-RBK110-96|EXP-NBD196]. Default: SQK-RBK110-96')
 
     parser.add_argument('-t', '--threads', type=int, dest='threads', required=False,
                         default=30, help='Threads to use (30 threads by default)')
@@ -105,7 +105,7 @@ def basecalling_ion(input_dir, out_basecalling_dir, config='dna_r9.4.1_450bps_fa
     execute_subprocess(cmd, isShell=False)
 
 
-def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_ends=False, barcode_kit='EXP-NBD196', threads=30):
+def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_ends=False, barcode_kit='SQK-RBK110-96', threads=30):
 
     # -i: Path to input files
     # -r: Search for input file recursively
@@ -115,6 +115,10 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
     # --compress_fastq: Compress fastq output files with gzip
     # --barcode_kits: Space separated list of barcoding kit(s) or expansion kit(s) to detect against. Must be in double quotes
     # --require_barcodes_both_ends: Reads will only be classified if there is a barcode above the min_score at both ends of the read
+
+    # --trim_barcodes: Trim the barcodes from the sequences in the output files.
+    # --trim_adapters: Trim the adapters from the sequences in the output files.
+    # --trim_primers: Trim the primers from the sequences in the output files.
 
     if require_barcodes_both_ends:
         logger.info(GREEN + BOLD + 'Barcodes are being used at both ends')
@@ -131,19 +135,19 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
     execute_subprocess(cmd, isShell=False)
 
 
-def read_filtering(barcode_path, output_samples, min_length=250, max_length=650):
+def rename_files(output_samples):
 
-    # --directory: Basecalled and demultiplexed (guppy) results directory
-    # --prefix: Prefix for guppyplex files
-    # --min-length: Remove reads less than read length
-    # --max-length: Remove reads greater than read length
-    # --output: FASTQ file to write
+    with open(output_samples, "w+") as bc_output:
+        for bc_line in sum_files:
+            with gzip.open(bc_line, "rb") as bcl:
+                for line in bcl:
+                    bc_output.write(line.decode())
+    # print(output_samples)
 
-    cmd = ['artic', 'guppyplex', '--directory', barcode_path, '--prefix', sample, '--min-length',
-           str(min_length), '--max-length', str(max_length), '--output', output_samples]
+    cmd_compress = ['bgzip', output_samples, '--threads', str(args.threads)]
 
-    # print(cmd)
-    execute_subprocess(cmd, isShell=False, isInfo=True)
+    # print(cmd_compress)
+    execute_subprocess(cmd_compress, isShell=False)
 
 
 def ONT_QC_filtering(output_samples, filtered_samples):
@@ -151,7 +155,7 @@ def ONT_QC_filtering(output_samples, filtered_samples):
     # -c: Write on standard output, keep the original files unchanged
     # -q: Filter on a minimum average read quality score
 
-    cmd_filtering = "NanoFilt {} -q {} --length {} --maxlength {} | gzip > {}".format(
+    cmd_filtering = "gunzip -c {} | NanoFilt -q {} --length {} --maxlength {} | gzip > {}".format(
         output_samples, str(args.min_quality), str(250), str(650), filtered_samples)
 
     # print(cmd_filtering)
@@ -286,7 +290,7 @@ if __name__ == '__main__':
 
     if args.samples == None:
         logger.info(
-            '\n' + GREEN + 'Filtering samples' + '\n')
+            '\n' + GREEN + 'Filtering samples' + END_FORMATTING + '\n')
         for root, _, files in os.walk(out_barcoding_dir):
             for subdirectory in _:
                 if subdirectory.startswith('barcode'):
@@ -303,18 +307,27 @@ if __name__ == '__main__':
                                 out_samples_filtered_dir, sample + '.fastq.gz')
                             # print(filtered_samples)
 
-                            logger.info('\n' + BLUE + sample + END_FORMATTING)
+                            logger.info('\n' + BLUE + BOLD +
+                                        sample + END_FORMATTING)
+
+                            sum_files = []
+                            for name in files2:
+                                filename = os.path.join(barcode_path, name)
+                                # print(filename)
+                                sum_files.append(filename)
+                            logger.info(MAGENTA + BOLD + "Processing {} files in {}".format(
+                                len(sum_files), sample) + END_FORMATTING)
 
                             if os.path.isfile(filtered_samples):
                                 logger.info(
-                                    YELLOW + sample + ' sample already filtered and renamed' + END_FORMATTING)
+                                    YELLOW + sample + ' sample already renamed and filtered' + END_FORMATTING)
                             else:
                                 logger.info(
-                                    '\n' + GREEN + 'Filtering by length ' + sample + END_FORMATTING)
-                                read_filtering(
-                                    barcode_path, output_samples, min_length=250, max_length=650)
+                                    GREEN + 'Renaming sample ' + sample + END_FORMATTING)
+                                rename_files(output_samples)
+
                                 logger.info(
-                                    '\n' + GREEN + 'Filtering by quality ' + sample + END_FORMATTING)
+                                    GREEN + 'Filtering sample ' + sample + END_FORMATTING)
                                 ONT_QC_filtering(
                                     output_samples, filtered_samples)
                         else:
@@ -322,7 +335,7 @@ if __name__ == '__main__':
 
     else:
         logger.info(
-            '\n' + GREEN + 'Filtering & Renaming')
+            '\n' + GREEN + 'Filtering & Renaming' + END_FORMATTING + '\n')
         with open(args.samples, 'r') as f:
             for line in f:
                 barcode, sample = line.split('\t')
@@ -335,22 +348,31 @@ if __name__ == '__main__':
                 filtered_samples = os.path.join(
                     out_samples_filtered_dir, sample.strip() + '.fastq.gz')
 
-                logger.info('\n' + BLUE + sample + END_FORMATTING)
+                logger.info('\n' + BLUE + BOLD + sample + END_FORMATTING)
 
-                if os.path.isfile(filtered_samples):
-                    logger.info(
-                        YELLOW + sample + ' sample already filtered and renamed' + END_FORMATTING)
-                else:
-                    logger.info(
-                        '\n' + GREEN + 'Filtering by length and renaming sample ' + sample + END_FORMATTING)
-                    read_filtering(barcode_path,
-                                   output_samples, min_length=250, max_length=650)
-                    logger.info(
-                        '\n' + GREEN + 'Filtering by quality ' + sample + END_FORMATTING)
-                    ONT_QC_filtering(output_samples, filtered_samples)
+                sum_files = []
+                for root, _, files in os.walk(barcode_path):
+                    for name in files:
+                        filename = os.path.join(barcode_path, name)
+                        # print(filename)
+                        sum_files.append(filename)
+                    logger.info(MAGENTA + BOLD + "Processing {} files in {}".format(
+                        len(sum_files), sample) + END_FORMATTING)
+
+                    if os.path.isfile(filtered_samples):
+                        logger.info(
+                            YELLOW + sample + ' sample already renamed and filtered' + END_FORMATTING)
+                    else:
+                        logger.info(GREEN + 'Renaming sample ' +
+                                    sample + END_FORMATTING)
+                        rename_files(output_samples)
+
+                        logger.info(GREEN + 'Filtering sample ' +
+                                    sample + END_FORMATTING)
+                        ONT_QC_filtering(output_samples, filtered_samples)
 
     after = datetime.datetime.now()
-    print(('\n' + "Done with function read_filtering & ONT_QC_filtering in: %s" %
+    print(('\n' + "Done with function rename_files & ONT_QC_filtering in: %s" %
           (after - prior) + "\n"))
 
     # Quality Check
@@ -373,7 +395,7 @@ if __name__ == '__main__':
 
             if os.path.isfile(report_file):
                 logger.info(YELLOW + report_file +
-                            " EXIST\nOmmiting QC for sample " + name + "\n" + END_FORMATTING)
+                            " EXIST\nOmmiting QC for sample " + name + END_FORMATTING)
             else:
                 logger.info(GREEN + "Checking quality in sample " +
                             name + END_FORMATTING)
