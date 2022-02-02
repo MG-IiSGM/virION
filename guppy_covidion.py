@@ -67,9 +67,6 @@ def get_arguments():
     parser.add_argument('-b', '--require_barcodes_both_ends', required=False, action='store_true',
                         help='Require barcodes at both ends. By default it only requires the barcode at one end for the sequences identification')
 
-    parser.add_argument('--kit', type=str, required=False,
-                        default='SQK-LSK109', help='Kit to find a configuration for')
-
     parser.add_argument('--barcode_kit', type=str, required=False,
                         default='EXP-NBD196', help='Kit of barcodes used')
 
@@ -95,7 +92,6 @@ def basecalling_ion(input_dir, out_basecalling_dir, config='dna_r9.4.1_450bps_fa
     # -i: Path to input fast5 files
     # -s: Path to save fastq files
     # -c: Config file to use > https://community.nanoporetech.com/posts/guppy-v5-0-7-release-note (fast // hac // sup)
-    # --kit: Kit to find a configuration for
     # --num_callers: Number of parallel basecallers to Basecaller, if supplied will form part
     # --cpu_threads_per_caller: Number of CPU worker threads per basecaller
     # --chunks_per_runner: Maximum chunks per runner
