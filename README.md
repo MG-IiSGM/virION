@@ -9,9 +9,9 @@ For the development of this pipeline it is necessary to download [Guppy](https:/
 
 If the installation of the yaml file for the envirenment does not correctly install the dependent packages with pip, you can do the installation manually using the following commands:
 
-- (https://github.com/cov-lineages/pangolin)[Pangolin]: pip install git+https://github.com/cov-lineages/pangolin
-- (https://github.com/cov-lineages/pangoLEARN.git)[PangoLEARN]: pip install git+https://github.com/cov-lineages/pangoLEARN.git
-- (https://github.com/cov-lineages/scorpio.git)[Scorpio]: pip install git+https://github.com/cov-lineages/scorpio.git
-- (https://github.com/cov-lineages/constellations.git)[Constellations]: pip install git+https://github.com/cov-lineages/constellations.git
-- (https://github.com/cov-lineages/pango-designation.git)[Pango-Designation]: pip install git+https://github.com/cov-lineages/pango-designation.git
-- (https://github.com/wdecoster/NanoPlot)[NanoPlot]: pip install NanoPlot && pip install NanoPlot --upgrade
+- [Pangolin](https://github.com/cov-lineages/pangolin): pip install git+https://github.com/cov-lineages/pangolin
+- [PangoLEARN](https://github.com/cov-lineages/pangoLEARN.git): pip install git+https://github.com/cov-lineages/pangoLEARN.git
+- [Scorpio](https://github.com/cov-lineages/scorpio.git): pip install git+https://github.com/cov-lineages/scorpio.git
+- [Constellations](https://github.com/cov-lineages/constellations.git): pip install git+https://github.com/cov-lineages/constellations.git
+- [Pango-Designation](https://github.com/cov-lineages/pango-designation.git): pip install git+https://github.com/cov-lineages/pango-designation.git
+- [NanoPlot](https://github.com/wdecoster/NanoPlot): pip install NanoPlot && pip install NanoPlot --upgrade
