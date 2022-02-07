@@ -255,13 +255,14 @@ if __name__ == '__main__':
 
     if os.path.isfile(basecalling_summary):
         logger.info("\n" + YELLOW + "Ommiting BASECALLING" +
-                    END_FORMATTING + "\n")
+                    END_FORMATTING)
     else:
         basecalling_ion(input_dir, out_basecalling_dir, config=args.config, callers=args.num_callers,
                         chunks=2048, threads=args.threads, records=args.records_per_fastq)
 
     after = datetime.datetime.now()
-    print(("Done with function basecalling_ion in: %s" % (after - prior) + "\n"))
+    print(("\n" + "Done with function basecalling_ion in: %s" %
+          (after - prior) + "\n"))
 
     # Barcoding
 
@@ -271,15 +272,16 @@ if __name__ == '__main__':
 
     if os.path.isfile(barcoding_summary):
         logger.info("\n" + YELLOW + "Ommiting BARCODING/DEMULTIPLEX" +
-                    END_FORMATTING + "\n")
+                    END_FORMATTING)
     else:
         logger.info(
-            "\n" + GREEN + "STARTING BARCODING/DEMULTIPLEX" + END_FORMATTING + "\n")
+            "\n" + GREEN + "STARTING BARCODING/DEMULTIPLEX" + END_FORMATTING)
         barcoding_ion(out_basecalling_dir, out_barcoding_dir, barcode_kit=args.barcode_kit,
                       threads=args.threads, require_barcodes_both_ends=args.require_barcodes_both_ends)
 
     after = datetime.datetime.now()
-    print(("Done with function barcoding_ion in: %s" % (after - prior) + "\n"))
+    print(("\n" + "Done with function barcoding_ion in: %s" %
+          (after - prior) + "\n"))
 
     # Read Filtering
 
@@ -290,7 +292,7 @@ if __name__ == '__main__':
 
     if args.samples == None:
         logger.info(
-            '\n' + GREEN + 'Filtering samples' + END_FORMATTING + '\n')
+            '\n' + GREEN + 'Filtering samples' + END_FORMATTING)
         for root, _, files in os.walk(out_barcoding_dir):
             for subdirectory in _:
                 if subdirectory.startswith('barcode'):
@@ -335,7 +337,7 @@ if __name__ == '__main__':
 
     else:
         logger.info(
-            '\n' + GREEN + 'Filtering & Renaming' + END_FORMATTING + '\n')
+            '\n' + GREEN + 'Filtering & Renaming' + END_FORMATTING)
         with open(args.samples, 'r') as f:
             for line in f:
                 barcode, sample = line.split('\t')
@@ -379,7 +381,8 @@ if __name__ == '__main__':
 
     prior = datetime.datetime.now()
 
-    logger.info("\n" + GREEN + "QUALITY CHECK IN RAW" + END_FORMATTING + '\n')
+    logger.info("\n" + GREEN + BOLD +
+                "QUALITY CHECK IN RAW" + END_FORMATTING + '\n')
 
     for root, _, files in os.walk(out_samples_filtered_dir):
         for name in files:
@@ -402,7 +405,7 @@ if __name__ == '__main__':
                 ONT_quality(filtered_sample, out_qc, threads=args.threads)
 
     after = datetime.datetime.now()
-    print(("Done with function ONT_quality in: %s" % (after - prior) + "\n"))
+    print(("\n" + "Done with function ONT_quality in: %s" % (after - prior) + "\n"))
 
     logger.info("\n" + MAGENTA + BOLD +
                 "#####END OF ONT DATA PROCESSING PIPELINE #####" + END_FORMATTING + "\n")
