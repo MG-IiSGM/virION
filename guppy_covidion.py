@@ -124,15 +124,16 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
     # --detect_primer: Detect primer sequences at the front and rear of the read.
 
     if require_barcodes_both_ends:
-        logger.info(GREEN + BOLD + 'Barcodes are being used at both ends')
+        logger.info(
+            GREEN + 'Barcodes are being used at both ends' + END_FORMATTING)
         require_barcodes_both_ends = "--require_barcodes_both_ends"
     else:
         logger.info(YELLOW + DIM + BOLD +
-                    'Barcodes are being used on at least 1 of the ends')
+                    'Barcodes are being used on at least 1 of the ends' + END_FORMATTING)
         require_barcodes_both_ends = ""
 
     cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends,
-           '--barcode_kit', barcode_kit, '-t', str(threads), '--detect_barcodes', '--trim_barcodes', '--fastq_out', '--compress_fastq']
+           '--barcode_kit', barcode_kit, '-t', str(threads), '--detect_barcodes', '--trim_barcodes', '--detect_primer', '--trim_primers', '--detect_adapter', '--trim_adapters', '--fastq_out', '--compress_fastq']
 
     print(cmd)
     execute_subprocess(cmd, isShell=False)
