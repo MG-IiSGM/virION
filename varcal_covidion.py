@@ -12,12 +12,15 @@ import gzip
 import multiprocessing
 import pandas as pd
 from tkinter import END
+import concurrent.futures
 
 
 # Local application imports
 
 from misc_covidion import (check_create_dir, check_remove_file,
-                           extract_read_list, extract_sample_list, execute_subprocess, check_reanalysis, file_to_list, obtain_group_cov_stats, obtain_overal_stats)
+                           extract_read_list, extract_sample_list, execute_subprocess, check_reanalysis, file_to_list, obtain_group_cov_stats, obtain_overal_stats, annotate_snpeff, user_annotation, user_annotation_aa, annotate_pangolin, annotation_to_html, report_samples_html, create_consensus)
+from compare_covidion import (
+    ddbb_create_intermediate, remove_position_range, revised_df, ddtb_compare)
 
 
 logger = logging.getLogger()
@@ -123,6 +126,12 @@ def get_arguments():
 
     compare_group.add_argument('-S', '--only_snp', required=False,
                                action='store_true', help='Use INDELS while comparing')
+
+    compare_group.add_argument("--min_threshold_discard_sample", required=False, type=float,
+                               default=0.7, help="Minimum inaccuracies to discard a sample. Default: 0.7")
+
+    compare_group.add_argument("--min_threshold_discard_all_pos", required=False, type=float,
+                               default=0.5, help="Minimum inaccuracies to discard a position. Default: 0.5")
 
     params_group = parser.add_argument_group(
         'Parameters', 'parameters for diferent stringent conditions')
@@ -395,6 +404,9 @@ if __name__ == "__main__":
     new_samples = check_reanalysis(args.output, sample_list_F)
 
     logger.info(CYAN + "\n%d samples will be analysed: %s" %
+                (len(sample_list_F), ",".join(sample_list_F)) + END_FORMATTING + '\n')
+
+    logger.info(CYAN + "\n%d NEW samples will be analysed: %s" %
                 (len(new_samples), ",".join(new_samples)) + END_FORMATTING + '\n')
 
     # Declare folders created in pipeline and key files
@@ -437,6 +449,9 @@ if __name__ == "__main__":
     check_create_dir(out_annot_user_dir)
     out_annot_user_aa_dir = os.path.join(out_annot_dir, "user_aa")  # subfolder
     check_create_dir(out_annot_user_aa_dir)
+    out_annot_pangolin_dir = os.path.join(
+        out_annot_dir, "pangolin")  # subfolder
+    check_create_dir(out_annot_pangolin_dir)
 
     ############### START PIPELINE ###############
 
@@ -646,6 +661,237 @@ if __name__ == "__main__":
     after = datetime.datetime.now()
     print(("Done with function obtain_group_cov_stats & obtain_overal_stats in: %s" % (
         after - prior) + "\n"))
+
+    ##### ANNOTATION #####
+
+    logger.info('\n' + GREEN + BOLD + 'STARTING ANNOTATION IN GROUP: ' +
+                group_name + END_FORMATTING + '\n')
+
+    # Annotation with SnpEFF
+
+    prior = datetime.datetime.now()
+
+    if args.snpeff_database != False:
+        # Change for raw/filtered annotation
+        for root, _, files in os.walk(out_filtered_ivar_dir):
+            if root == out_filtered_ivar_dir:  # Change for raw/filtered annotation
+                for name in files:
+                    if name.endswith('.tsv'):
+                        sample = name.split('.')[0]
+                        filename = os.path.join(root, name)
+                        out_annot_file = os.path.join(
+                            out_annot_snpeff_dir, sample + '.annot')
+
+                        if os.path.isfile(out_annot_file):
+                            logger.info(
+                                YELLOW + out_annot_file + ' EXIST\nOmmiting snpEff annotation for sample ' + sample + END_FORMATTING)
+                        else:
+                            logger.info(
+                                GREEN + 'Annotation sample with snpEff: ' + sample + END_FORMATTING)
+                            output_vcf = os.path.join(
+                                out_annot_snpeff_dir, sample + '.vcf')
+                            annotate_snpeff(
+                                filename, output_vcf, out_annot_file, database=args.snpeff_database)
+
+    else:
+        logger.info(YELLOW + BOLD + 'No SnpEFF database suplied, skipping annotation in group ' +
+                    group_name + END_FORMATTING)
+
+    after = datetime.datetime.now()
+    print(("Done with function annotate_snpeff in: %s" % (after - prior) + "\n"))
+
+    # Annotation for user defined (bed & vcf annot)
+
+    prior = datetime.datetime.now()
+
+    if not args.annot_bed and not args.annot_vcf:
+        logger.info(
+            YELLOW + BOLD + 'Ommiting user annotation, no BED or VCF files supplied' + END_FORMATTING)
+    else:
+        # Change for raw/filtered annotation
+        for root, _, files in os.walk(out_variant_ivar_dir):
+            if root == out_variant_ivar_dir:  # Change for raw/filtered annotation
+                for name in files:
+                    if name.endswith('.tsv'):
+                        sample = name.split('.')[0]
+                        logger.info(
+                            GREEN + 'User bed/vcf annotation in sample {}'.format(sample) + END_FORMATTING)
+                        filename = os.path.join(root, name)
+                        out_annot_file = os.path.join(
+                            out_annot_user_dir, sample + '.tsv')
+                        user_annotation(
+                            filename, out_annot_file, vcf_files=args.annot_vcf, bed_files=args.annot_bed)
+
+    after = datetime.datetime.now()
+    print(("Done with function user_annotation in: %s" % (after - prior) + "\n"))
+
+    # Annotation for user aa defined (aminoacid annot)
+
+    prior = datetime.datetime.now()
+
+    if not args.annot_aa:
+        logger.info(
+            YELLOW + BOLD + 'Ommiting user aa annotation, no AA files supplied' + END_FORMATTING)
+    else:
+        for root, _, files in os.walk(out_annot_snpeff_dir):
+            if root == out_annot_snpeff_dir:
+                for name in files:
+                    if name.endswith('.annot'):
+                        sample = name.split('.')[0]
+                        logger.info(
+                            GREEN + 'User aa annotation in sample {}'.format(sample) + END_FORMATTING)
+                        filename = os.path.join(root, name)
+                        out_annot_aa_file = os.path.join(
+                            out_annot_user_aa_dir, sample + '.tsv')
+                        if os.path.isfile(out_annot_aa_file):
+                            user_annotation_aa(
+                                out_annot_aa_file, out_annot_aa_file, aa_files=args.annot_aa)
+                        else:
+                            user_annotation_aa(
+                                filename, out_annot_aa_file, aa_files=args.annot_aa)
+
+    after = datetime.datetime.now()
+    print(("Done with function user_annotation_aa in: %s" % (after - prior) + "\n"))
+
+    # Pangolin
+
+    prior = datetime.datetime.now()
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.threads) as executor:
+        futures_pangolin = []
+
+        for root, _, files in os.walk(out_consensus_ivar_dir):
+            if root == out_consensus_ivar_dir:
+                for name in files:
+                    if name.endswith('.fa'):
+                        sample = name.split('.')[0]
+                        filename = os.path.join(root, name)
+                        out_pangolin_filename = sample + '.lineage.csv'
+                        out_pangolin_file = os.path.join(
+                            out_annot_pangolin_dir, out_pangolin_filename)
+
+                        if os.path.isfile(out_pangolin_file):
+                            logger.info(
+                                YELLOW + out_pangolin_file + ' EXIST\nOmmiting lineage for sample ' + sample + END_FORMATTING)
+                        else:
+                            logger.info(
+                                GREEN + 'Obtaining lineage in sample ' + sample + END_FORMATTING)
+                            future = executor.submit(
+                                annotate_pangolin, filename, out_annot_pangolin_dir, out_pangolin_filename, threads=args.threads, max_ambig=0.6)
+                            futures_pangolin.append(future)
+
+                for future in concurrent.futures.as_completed(futures_pangolin):
+                    logger.info(future.result())
+
+    after = datetime.datetime.now()
+    print(("Done with function annotate_pangolin in: %s" % (after - prior) + "\n"))
+
+    # # User AA to html
+
+    # prior = datetime.datetime.now()
+
+    # annotated_samples = []
+
+    # logger.info(
+    #     GREEN + 'Adapting annotation to html in {}'.format(group_name) + END_FORMATTING)
+
+    # for root, _, files in os.walk(out_annot_user_aa_dir):
+    #     if root == out_annot_user_aa_dir:
+    #         for name in files:
+    #             if name.endswith('.tsv'):
+    #                 sample = name.split('.')[0]
+    #                 annotated_samples.append(sample)
+    #                 filename = os.path.join(root, name)
+    #                 annotation_to_html(filename, sample)
+
+    # annotated_samples = [str(x) for x in annotated_samples]
+    # report_samples_html_all = report_samples_html.replace(
+    #     'ALLSAMPLES', ('","').join(annotated_samples))  # NEW
+
+    # with open(os.path.join(out_annot_user_aa_dir, 'All_samples.html'), 'w+') as f:
+    #     f.write(report_samples_html_all)
+
+    # after = datetime.datetime.now()
+    # print(("Done with function annotation_to_html in: %s" % (after - prior) + "\n"))
+
+    ##### COMPARISON #####
+
+    # SNPs comparison using tsv variant files
+
+    prior = datetime.datetime.now()
+
+    logger.info('\n' + GREEN + BOLD + 'STARTING COMPARISON IN GROUP: ' +
+                group_name + END_FORMATTING + '\n')
+
+    folder_compare = today + '_' + group_name
+    path_compare = os.path.join(out_compare_dir, folder_compare)
+    check_create_dir(path_compare)
+    full_path_compare = os.path.join(path_compare, group_name)
+
+    compare_snp_matrix_recal = full_path_compare + '.revised.final.tsv'
+    compare_snp_matrix_INDEL = full_path_compare + ".revised_INDEL.final.tsv"
+    compare_snp_matrix_recal_intermediate = full_path_compare + ".revised_intermediate.tsv"
+    compare_snp_matrix_INDEL_intermediate = full_path_compare + \
+        ".revised_INDEL_intermediate.tsv"
+
+    recalibrated_snp_matrix_intermediate = ddbb_create_intermediate(
+        out_variant_ivar_dir, out_stats_coverage_dir, min_freq_discard=args.min_allele, min_alt_dp=4, only_snp=args.only_snp)
+    recalibrated_snp_matrix_intermediate.to_csv(
+        compare_snp_matrix_recal_intermediate, sep="\t", index=False)
+
+    after = datetime.datetime.now()
+    print(("Done with function ddbb_create_intermediate in: %s" %
+          (after - prior) + "\n"))
+
+    prior = datetime.datetime.now()
+
+    compare_snp_matrix_INDEL_intermediate_df = remove_position_range(
+        recalibrated_snp_matrix_intermediate)
+    compare_snp_matrix_INDEL_intermediate_df.to_csv(
+        compare_snp_matrix_INDEL_intermediate, sep="\t", index=False)
+
+    after = datetime.datetime.now()
+    print(("Done with function remove_position_range in: %s" %
+          (after - prior) + "\n"))
+
+    prior = datetime.datetime.now()
+
+    recalibrated_revised_df = revised_df(recalibrated_snp_matrix_intermediate, path_compare, min_freq_include=args.min_frequency,
+                                         min_threshold_discard_sample=args.min_threshold_discard_sample, min_threshold_discard_position=args.min_threshold_discard_position, remove_faulty=True, drop_samples=True, drop_positions=True)
+    recalibrated_revised_df.to_csv(
+        compare_snp_matrix_recal, sep="\t", index=False)
+
+    recalibrated_revised_INDEL_df = revised_df(compare_snp_matrix_INDEL_intermediate_df, path_compare, min_freq_include=args.min_frequency,
+                                               min_threshold_discard_sample=args.min_threshold_discard_sample, min_threshold_discard_position=args.min_threshold_discard_position, remove_faulty=True, drop_samples=True, drop_positions=True)
+    recalibrated_revised_INDEL_df.to_csv(
+        compare_snp_matrix_INDEL, sep="\t", index=False)
+
+    after = datetime.datetime.now()
+    print(("Done with function revised_df in: %s" % (after - prior) + "\n"))
+
+    prior = datetime.datetime.now()
+
+    ddtb_compare(compare_snp_matrix_recal, distance=0)
+    ddtb_compare(compare_snp_matrix_INDEL, distance=0, indel=True)
+
+    after = datetime.datetime.now()
+    print(("Done with function ddtb_compare in: %s" % (after - prior) + "\n"))
+
+    logger.info(MAGENTA + BOLD + 'COMPARISON FINISHED IN GROUP: ' +
+                group_name + END_FORMATTING + '\n')
+
+    ##### REFINING CONSENSUS #####
+
+    prior = datetime.datetime.now()
+
+    logger.info('\n' + GREEN + BOLD +
+                'CREATING REFINED CONSENSUS' + END_FORMATTING)
+
+    create_consensus(reference, compare_snp_matrix_recal,
+                     out_stats_coverage_dir, out_consensus_dir)
+
+    after = datetime.datetime.now()
+    print(("Done with function create_consensus in: %s" % (after - prior) + "\n"))
 
     logger.info("\n" + MAGENTA + BOLD +
                 "##### END OF ONT VARIANT CALLING PIPELINE #####" + "\n" + END_FORMATTING)
