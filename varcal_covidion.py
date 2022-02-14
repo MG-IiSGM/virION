@@ -130,7 +130,7 @@ def get_arguments():
     compare_group.add_argument("--min_threshold_discard_sample", required=False, type=float,
                                default=0.7, help="Minimum inaccuracies to discard a sample. Default: 0.7")
 
-    compare_group.add_argument("--min_threshold_discard_all_pos", required=False, type=float,
+    compare_group.add_argument("--min_threshold_discard_position", required=False, type=float,
                                default=0.5, help="Minimum inaccuracies to discard a position. Default: 0.5")
 
     params_group = parser.add_argument_group(
