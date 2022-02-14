@@ -14,4 +14,4 @@ If the installation of the yaml file for the envirenment does not correctly inst
 - [Scorpio](https://github.com/cov-lineages/scorpio.git): pip install git+https://github.com/cov-lineages/scorpio.git
 - [Constellations](https://github.com/cov-lineages/constellations.git): pip install git+https://github.com/cov-lineages/constellations.git
 - [Pango-Designation](https://github.com/cov-lineages/pango-designation.git): pip install git+https://github.com/cov-lineages/pango-designation.git
-- [NanoPlot](https://github.com/wdecoster/NanoPlot): pip install NanoPlot && pip install NanoPlot --upgrade (or the default package [NanoPack](https://github.com/wdecoster/nanopack)
+- [NanoPlot](https://github.com/wdecoster/NanoPlot): pip install NanoPlot && pip install NanoPlot --upgrade (or the default package [NanoPack](https://github.com/wdecoster/nanopack))
