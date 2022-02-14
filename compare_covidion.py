@@ -57,6 +57,18 @@ def get_arguments():
     parser.add_argument('-S', '--only_snp', required=False,
                         action='store_true', help='Use INDELS while comparing')
 
+    parser.add_argument("-f", "--min_allele_frequency", type=int, dest="min_allele", required=False,
+                        default=0.2, help="Minimum fraction of observations supporting an alternate allele. Default: 0.2")
+
+    parser.add_argument("-freq", "--min_frequency", type=int, dest="min_frequency", required=False,
+                        default=0.6, help="Minimum fraction of observations to call a base. Default: 0.6")
+
+    parser.add_argument("--min_threshold_discard_sample", required=False, type=float,
+                        default=0.7, help="Minimum inaccuracies to discard a sample. Default: 0.7")
+
+    parser.add_argument("--min_threshold_discard_all_pos", required=False, type=float,
+                        default=0.5, help="Minimum inaccuracies to discard a position. Default: 0.5")
+
     parser.add_argument('-o', '--output', type=str, required=True,
                         help='Name of all the output files, might include path')
 
@@ -78,6 +90,16 @@ def check_file_exists(file_name):
                     file_name + END_FORMATTING)
         sys.exit(1)
     return os.path.isfile(file_name)
+
+
+def check_create_dir(path):
+    # exists = os.path.isfile(path)
+    # exists = os.path.isdir(path)
+
+    if os.path.exists(path):
+        pass
+    else:
+        os.mkdir(path)
 
 
 def import_to_pandas(file_table, header=False, sep='\t'):
@@ -283,7 +305,7 @@ def remove_position_range(df):
     return df
 
 
-def revised_df(df, out_dir=False, min_freq_include=0.7, min_threshold_discard_sample=0.4, min_threshold_discard_position=0.4, remove_faulty=True, drop_samples=True, drop_positions=True):
+def revised_df(df, out_dir=False, min_freq_include=0.6, min_threshold_discard_sample=0.7, min_threshold_discard_position=0.5, remove_faulty=True, drop_samples=True, drop_positions=True):
 
     if remove_faulty == True:
         uncovered_positions = df.iloc[:, 3:].apply(lambda x:  sum(
@@ -550,6 +572,139 @@ def ddtb_compare(final_database, distance=0, indel=False):
     matrix_to_common(presence_ddbb, common_file)
 
 
+def bed_to_df(bed_file):
+    """
+    Import bed file separated by tabs into a pandas df
+    - Handle header line
+    - Handle with and without description (If there is no description adds true or false to annotated df)
+    """
+
+    header_lines = 0
+
+    # Handle likely header by checking colums 2 and 3 as numbers
+    with open(bed_file, 'r') as f:
+        next_line = f.readline().strip()
+        line_split = next_line.split(None)  # This split by any blank character
+        start = line_split[1]
+        end = line_split[2]
+
+        while not start.isdigit() and not end.isdigit():
+            header_lines = header_lines + 1
+            next_line = f.readline().strip()
+            # This split by any blank character
+            line_split = next_line.split(None)
+            start = line_split[1]
+            end = line_split[2]
+
+    if header_lines == 0:
+        # delim_whitespace=True
+        df = pd.read_csv(bed_file, sep="\t", header=None)
+    else:
+        df = pd.read_csv(bed_file, sep="\t", skiprows=header_lines,
+                         header=None)  # delim_whitespace=True
+
+    df = df.iloc[:, 0:4]
+    df.columns = ["#CHROM", "start", "end", "description"]
+
+    return df
+
+
+def remove_bed_positions(df, bed_file):
+
+    bed_df = bed_to_df(bed_file)
+
+    for _, row in df.iterrows():
+        position_number = int(row.Position.split("|")[2])
+        if any(start <= position_number <= end for (start, end) in zip(bed_df.start.values.tolist(), bed_df.end.values.tolist())):
+            logger.info('Position: {} removed found in {}'.format(
+                row.Position, bed_file))
+            df = df[df.Position != row.Position]
+
+    return df
+
+
 if __name__ == '__main__':
 
     args = get_arguments()
+
+    output_dir = os.path.abspath(args.output)
+    group_name = output_dir.split('/')[-1]
+    check_create_dir(output_dir)
+
+    ##### Logging #####
+
+    # Create log file with date and time
+
+    right_now = str(datetime.datetime.now())
+    right_now_full = "_".join(right_now.split(" "))
+    log_filename = group_name + "_" + right_now_full + ".log"
+    log_folder = os.path.join(output_dir, 'Logs')
+    check_create_dir(log_folder)
+    log_full_path = os.path.join(log_folder, log_filename)
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter('%(asctime)s:%(message)s')
+
+    file_handler = logging.FileHandler(log_full_path)
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(formatter)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.INFO)
+    # stream_handler.setFormatter(formatter)
+
+    logger.addHandler(stream_handler)
+    logger.addHandler(file_handler)
+
+    logger.info('########## COMPARE SNPs ##########')
+    logger.info(args)
+
+    group_compare = os.path.join(output_dir, group_name)
+    compare_snp_matrix = group_compare + '.tsv'
+
+    if args.only_compare == False:
+
+        input_dir = os.path.abspath(args.input_dir)
+        coverage_dir = os.path.abspath(args.recalibrate)
+
+        compare_snp_matrix_recal = group_compare + 'revised.final.tsv'
+        compare_snp_matrix_recal_intermediate = group_compare + ".revised_intermediate.tsv"
+
+        compare_snp_matrix_INDEL = group_compare + ".revised_INDEL.final.tsv"
+        compare_snp_matrix_INDEL_intermediate = group_compare + \
+            ".revised_INDEL_intermediate.tsv"
+
+        recalibrated_snp_matrix_intermediate = ddbb_create_intermediate(
+            input_dir, coverage_dir, min_freq_discard=args.min_allele, min_alt_dp=4, only_snp=args.only_snp)
+
+        if args.remove_bed:
+            recalibrated_snp_matrix_intermediate = remove_bed_positions(
+                recalibrated_snp_matrix_intermediate, args.remove_bed)
+
+        recalibrated_snp_matrix_intermediate.to_csv(
+            compare_snp_matrix_recal_intermediate, sep="\t", index=False)
+
+        compare_snp_matrix_INDEL_intermediate_df = remove_position_range(
+            recalibrated_snp_matrix_intermediate)
+        compare_snp_matrix_INDEL_intermediate_df.to_csv(
+            compare_snp_matrix_INDEL_intermediate, sep="\t", index=False)
+
+        recalibrated_revised_df = revised_df(recalibrated_snp_matrix_intermediate, output_dir, min_freq_include=args.min_frequency, min_threshold_discard_sample=args.min_threshold_discard_sample,
+                                             min_threshold_discard_position=args.min_threshold_discard_position, remove_faulty=True, drop_samples=True, drop_positions=True)
+        recalibrated_revised_df.to_csv(
+            compare_snp_matrix_recal, sep="\t", index=False)
+
+        recalibrated_revised_INDEL_df = revised_df(compare_snp_matrix_INDEL_intermediate_df, output_dir, min_freq_include=args.min_frequency,  min_threshold_discard_sample=args.min_threshold_discard_sample,
+                                                   min_threshold_discard_position=args.min_threshold_discard_position, remove_faulty=True, drop_samples=True, drop_positions=True)
+        recalibrated_revised_INDEL_df.to_csv(
+            compare_snp_matrix_INDEL, sep="\t", index=False)
+
+        ddtb_compare(compare_snp_matrix_recal, distance=args.distance)
+        ddtb_compare(compare_snp_matrix_INDEL,
+                     distance=args.distance, indel=True)
+
+    else:
+        compare_matrix = os.path.abspath(args.only_compare)
+        ddtb_compare(compare_matrix, distance=args.distance)

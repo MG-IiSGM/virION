@@ -160,7 +160,7 @@ def ONT_QC_filtering(output_samples, filtered_samples):
     # -q: Filter on a minimum average read quality score
 
     cmd_filtering = "gunzip -c {} | NanoFilt -q {} --length {} --maxlength {} | gzip > {}".format(
-        output_samples, str(args.min_quality), str(250), str(650), filtered_samples)
+        output_samples, str(args.min_quality), str(200), str(600), filtered_samples)
 
     # print(cmd_filtering)
     execute_subprocess(cmd_filtering, isShell=True)
