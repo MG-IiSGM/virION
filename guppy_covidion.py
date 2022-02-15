@@ -132,8 +132,10 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
                     'Barcodes are being used on at least 1 of the ends' + END_FORMATTING)
         require_barcodes_both_ends = ""
 
-    cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends,
-           '--barcode_kit', barcode_kit, '-t', str(threads), '--detect_barcodes', '--trim_barcodes', '--detect_primer', '--trim_primers', '--detect_adapter', '--trim_adapters', '--fastq_out', '--compress_fastq']
+    cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '--barcode_kit', barcode_kit, '-t',
+           str(threads), '--detect_barcodes', '--trim_barcodes', '--detect_primer', '--trim_primers', '--detect_adapter', '--trim_adapters', '--fastq_out', '--compress_fastq']
+
+    # cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '--barcode_kit', barcode_kit, '-t', str(threads), '--fastq_out', '--compress_fastq']
 
     print(cmd)
     execute_subprocess(cmd, isShell=False)

@@ -66,7 +66,7 @@ def get_arguments():
     parser.add_argument("--min_threshold_discard_sample", required=False, type=float,
                         default=0.7, help="Minimum inaccuracies to discard a sample. Default: 0.7")
 
-    parser.add_argument("--min_threshold_discard_all_pos", required=False, type=float,
+    parser.add_argument("--min_threshold_discard_position", required=False, type=float,
                         default=0.5, help="Minimum inaccuracies to discard a position. Default: 0.5")
 
     parser.add_argument('-o', '--output', type=str, required=True,
