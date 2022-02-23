@@ -247,20 +247,21 @@ def calculate_cov_stats(file_cov):
 def obtain_group_cov_stats(directory, group_name):
 
     directory_path = os.path.abspath(directory)
+    # print(directory_path)
     samples_to_skip = []
     previous_stat = False
 
     output_group_name = group_name + ".coverage.summary.tab"
     output_file = os.path.join(directory_path, output_group_name)
+    # print(output_file)
 
     if os.path.exists(output_file):
         previous_stat = True
         df_stat = pd.read_csv(output_file, sep="\t")
         samples_to_skip = df_stat["#SAMPLE"].tolist()
-        logger.debug(
-            "Skipped samples for coverage calculation:" +
-            (",").join(samples_to_skip)
-        )
+        # print(samples_to_skip)
+        logger.debug("Skipped samples for coverage calculation:" +
+                     (",").join(str(samples_to_skip)))
 
     columns = [
         "#SAMPLE",
@@ -272,7 +273,7 @@ def obtain_group_cov_stats(directory, group_name):
         "COV>50X",
         "COV>100X",
         "COV>500X",
-        "COV>1000X",
+        "COV>1000X"
     ]
 
     files_list = []
@@ -319,11 +320,11 @@ def extract_snp_count(output_dir, sample):
         htz_snps = df["POS"][(df.PASS == True) &
                              (df.ALT_DP >= 20) &
                              (df.ALT_FREQ < 0.7) &
-                             (df.ALT_FREQ >= 0.2) &
+                             (df.ALT_FREQ >= 0.5) &
                              ~(df.ALT.str.startswith('+') | df.ALT.str.startswith('-'))].tolist()
         indels = df["POS"][(df.PASS == True) &
                            (df.ALT_DP >= 20) &
-                           (df.ALT_FREQ >= 0.7) &
+                           (df.ALT_FREQ >= 0.6) &
                            (df.ALT.str.startswith('+') | df.ALT.str.startswith('-'))].tolist()
         return (len(high_quality_snps), len(htz_snps), len(indels))
     else:
@@ -418,7 +419,7 @@ def obtain_overal_stats(out_stats_dir, output_dir, group):
         df_stat = pd.read_csv(overal_stat_file, sep="\t")
         samples_to_skip = df_stat["#SAMPLE"].tolist()
         logger.debug("Skipped samples for coverage calculation:" +
-                     (",").join(samples_to_skip))
+                     (",").join(str(samples_to_skip)))
 
     for root, _, files in os.walk(out_stats_dir):
         for name in files:

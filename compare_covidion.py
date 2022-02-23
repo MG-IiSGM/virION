@@ -305,7 +305,7 @@ def remove_position_range(df):
     return df
 
 
-def revised_df(df, out_dir=False, min_freq_include=0.6, min_threshold_discard_sample=0.7, min_threshold_discard_position=0.5, remove_faulty=True, drop_samples=True, drop_positions=True):
+def revised_df(df, out_dir=False, min_freq_include=0.6, min_threshold_discard_sample=0.5, min_threshold_discard_position=0.5, remove_faulty=True, drop_samples=True, drop_positions=True):
 
     if remove_faulty == True:
         uncovered_positions = df.iloc[:, 3:].apply(lambda x:  sum(
@@ -669,7 +669,7 @@ if __name__ == '__main__':
         input_dir = os.path.abspath(args.input_dir)
         coverage_dir = os.path.abspath(args.recalibrate)
 
-        compare_snp_matrix_recal = group_compare + 'revised.final.tsv'
+        compare_snp_matrix_recal = group_compare + '.revised.final.tsv'
         compare_snp_matrix_recal_intermediate = group_compare + ".revised_intermediate.tsv"
 
         compare_snp_matrix_INDEL = group_compare + ".revised_INDEL.final.tsv"
