@@ -128,7 +128,7 @@ def get_arguments():
                                action='store_true', help='Use INDELS while comparing')
 
     compare_group.add_argument("--min_threshold_discard_sample", required=False, type=float,
-                               default=0.7, help="Minimum inaccuracies to discard a sample. Default: 0.7")
+                               default=0.5, help="Minimum inaccuracies to discard a sample. Default: 0.5")
 
     compare_group.add_argument("--min_threshold_discard_position", required=False, type=float,
                                default=0.5, help="Minimum inaccuracies to discard a position. Default: 0.5")
@@ -470,7 +470,7 @@ if __name__ == "__main__":
                 new_sample_number = str(int(new_sample_number) + 1)
                 new_sample_total = str(len(new_samples))
                 logger.info("\n" + WHITE_BG + "STARTING SAMPLE: " + sample + " (" + sample_number + "/" +
-                            sample_total + ")" + END_FORMATTING + '\n')
+                            sample_total + ")" + " (" + new_sample_number + "/" + new_sample_total + ")" + END_FORMATTING + '\n')
             else:
                 logger.info("\n" + WHITE_BG + "STARTING SAMPLE: " + sample +
                             " (" + sample_number + "/" + sample_total + ")" + END_FORMATTING + '\n')
