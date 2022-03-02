@@ -320,7 +320,7 @@ def extract_snp_count(output_dir, sample):
         htz_snps = df["POS"][(df.PASS == True) &
                              (df.ALT_DP >= 20) &
                              (df.ALT_FREQ < 0.7) &
-                             (df.ALT_FREQ >= 0.5) &
+                             (df.ALT_FREQ >= 0.4) &
                              ~(df.ALT.str.startswith('+') | df.ALT.str.startswith('-'))].tolist()
         indels = df["POS"][(df.PASS == True) &
                            (df.ALT_DP >= 20) &
