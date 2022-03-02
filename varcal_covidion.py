@@ -739,7 +739,7 @@ if __name__ == "__main__":
                     if name.endswith('.annot'):
                         sample = name.split('.')[0]
                         logger.info(
-                            GREEN + 'User aa annotation in sample {}'.format(sample) + END_FORMATTING)
+                            GREEN + '\n' + 'User aa annotation in sample {}'.format(sample) + END_FORMATTING)
                         filename = os.path.join(root, name)
                         out_annot_aa_file = os.path.join(
                             out_annot_user_aa_dir, sample + '.tsv')
