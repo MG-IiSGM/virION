@@ -62,7 +62,7 @@ def get_arguments():
                         help='Sample list for conversion from barcode to samples ID')
 
     parser.add_argument('-c', '--config', type=str, default='dna_r9.4.1_450bps_fast.cfg', required=False,
-                        help='REQUIRED. Config parameter for guppy_basecalling [fast|hac|sup]. Fast mode basecalling by default')
+                        help='REQUIRED. Config parameter for guppy_basecalling [fast|hac|sup]. Default: dna_r9.4.1_450bps_fast.cfg"')
 
     parser.add_argument('-b', '--require_barcodes_both_ends', required=False, action='store_true',
                         help='Require barcodes at both ends. By default it only requires the barcode at one end for the sequences identification')
@@ -132,7 +132,7 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
                     'Barcodes are being used on at least 1 of the ends' + END_FORMATTING)
         require_barcodes_both_ends = ""
 
-    cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '--barcode_kit', barcode_kit, '-t',
+    cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '--barcode_kits', barcode_kit, '-t',
            str(threads), '--detect_barcodes', '--trim_barcodes', '--detect_primer', '--trim_primers', '--detect_adapter', '--trim_adapters', '--fastq_out', '--compress_fastq']
 
     # cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '--barcode_kit', barcode_kit, '-t', str(threads), '--fastq_out', '--compress_fastq']

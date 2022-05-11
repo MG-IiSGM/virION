@@ -92,7 +92,7 @@ def get_arguments():
                                default=0.6, help="Minimum fraction of observations to call a base. Default: 0.6")
 
     variant_group.add_argument("-d", "--min_depth", type=int, dest="min_depth",
-                               required=False, default=8, help="Minimum depth to call a base. Default: 10")
+                               required=False, default=12, help="Minimum depth to call a base. Default: 12")
 
     quality_group = parser.add_argument_group(
         'Quality parameters', "Parameters for diferent Quality conditions")
@@ -128,7 +128,7 @@ def get_arguments():
                                action='store_true', help='Use INDELS while comparing')
 
     compare_group.add_argument("--min_threshold_discard_sample", required=False, type=float,
-                               default=0.5, help="Minimum inaccuracies to discard a sample. Default: 0.5")
+                               default=0.6, help="Minimum inaccuracies to discard a sample. Default: 0.6")
 
     compare_group.add_argument("--min_threshold_discard_position", required=False, type=float,
                                default=0.5, help="Minimum inaccuracies to discard a position. Default: 0.5")
@@ -272,7 +272,7 @@ def filter_tsv_variants(tsv_file, output_filtered, min_frequency=0.6, min_total_
         filtered_df.to_csv(output_file, sep='\t', index=False)
 
 
-def ivar_consensus(input_bam, output_consensus, sample, min_quality=15, min_frequency_threshold=0.6, min_depth=8, uncovered_character='N'):
+def ivar_consensus(input_bam, output_consensus, sample, min_quality=15, min_frequency_threshold=0.6, min_depth=20, uncovered_character='N'):
     """
     https://andersen-lab.github.io/ivar/html/manualpage.html
     Usage: samtools mpileup -aa -A -d 0 -Q 0 <input.bam> | ivar consensus -p <prefix> 
