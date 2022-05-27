@@ -1,4 +1,4 @@
-name: covidion
+name: virion
 channels:
   - bjrn
   - bioconda
@@ -300,24 +300,23 @@ dependencies:
   - zlib=1.2.11=h36c2ea0_1013
   - zstd=1.4.9=haebb681_0
   - pip:
-    - bokeh==2.4.2
-    - constellations==0.1.4
-    - jinja2==3.0.3
-    - kaleido==0.2.1
-    - mappy==2.24
-    - markupsafe==2.0.1
-    - nanocomp==1.18.0
-    - nanolyse==1.2.0
-    - nanopack==1.1.0
-    - nanoplot==1.39.0
-    - nanoqc==0.9.4
-    - nanostat==1.6.0
-    - pango-designation==1.2.141
-    - pangolearn==2022-03-22
-    - pangolin==4.0.2
-    - plotly==5.6.0
-    - pyarrow==7.0.0
-    - python-deprecated==1.1.0
-    - scorpio==0.3.16
-    - tenacity==8.0.1
-prefix: /home/laura/anaconda3/envs/covidion
+      - bokeh==2.4.2
+      - constellations==0.1.4
+      - jinja2==3.0.3
+      - kaleido==0.2.1
+      - mappy==2.24
+      - markupsafe==2.0.1
+      - nanocomp==1.18.0
+      - nanolyse==1.2.0
+      - nanopack==1.1.0
+      - nanoplot==1.39.0
+      - nanoqc==0.9.4
+      - nanostat==1.6.0
+      - pango-designation==1.2.141
+      - pangolearn==2022-03-22
+      - pangolin==4.0.2
+      - plotly==5.6.0
+      - pyarrow==7.0.0
+      - python-deprecated==1.1.0
+      - scorpio==0.3.16
+      - tenacity==8.0.1

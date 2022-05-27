@@ -1,4 +1,4 @@
-# CovidION
+# VirION
 
 Pipeline for analysis of any type or viral organism with small genomes. Pipeline specialized in SARS-CoV-2 MinION samples
 

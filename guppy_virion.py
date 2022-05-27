@@ -11,7 +11,7 @@ import gzip
 
 # Local application imports
 
-from misc_covidion import check_create_dir, check_file_exists, extract_read_list, extract_sample_list, execute_subprocess
+from misc_virion import check_create_dir, check_file_exists, extract_read_list, extract_sample_list, execute_subprocess
 
 
 logger = logging.getLogger()
@@ -50,7 +50,7 @@ DIM = '\033[2m'
 def get_arguments():
 
     parser = argparse.ArgumentParser(
-        prog='guppy_minion.py', description='Pipeline to basecalling and barcoding fast5 files from minION sequencing')
+        prog='guppy_virion.py', description='Pipeline to basecalling and barcoding fast5 files from minION sequencing')
 
     parser.add_argument('-i', '--input', dest='input_dir', metavar='input_directory',
                         type=str, required=True, help='REQUIRED. Input directory containing all fast5 files')

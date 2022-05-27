@@ -17,9 +17,9 @@ import concurrent.futures
 
 # Local application imports
 
-from misc_covidion import (check_create_dir, check_remove_file,
-                           extract_read_list, extract_sample_list, execute_subprocess, check_reanalysis, file_to_list, obtain_group_cov_stats, obtain_overal_stats, annotate_snpeff, user_annotation, user_annotation_aa, annotate_pangolin, annotation_to_html, report_samples_html, create_consensus)
-from compare_covidion import (
+from misc_virion import (check_create_dir, check_remove_file,
+                         extract_read_list, extract_sample_list, execute_subprocess, check_reanalysis, file_to_list, obtain_group_cov_stats, obtain_overal_stats, annotate_snpeff, user_annotation, user_annotation_aa, annotate_pangolin, annotation_to_html, report_samples_html, create_consensus)
+from compare_virion import (
     ddbb_create_intermediate, remove_position_range, revised_df, ddtb_compare)
 
 
@@ -57,7 +57,7 @@ DIM = "\033[2m"
 def get_arguments():
 
     parser = argparse.ArgumentParser(
-        prog="varcal_covidion.py", description="Pipeline to Variant Calling from MinION sequencing. Specialized in viruses")
+        prog="varcal_virion.py", description="Pipeline to Variant Calling from MinION sequencing. Specialized in viruses")
 
     input_group = parser.add_argument_group("Input", "Input parameters")
 

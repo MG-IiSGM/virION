@@ -1,4 +1,4 @@
-name: covidion
+name: virion
 channels:
   - bjrn
   - bioconda

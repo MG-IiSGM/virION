@@ -34,7 +34,7 @@ DIM = '\033[2m'
 def get_arguments():
 
     parser = argparse.ArgumentParser(
-        prog='compare_covidion.py', description='Pipeline to compare call variants (SNVs) for viruses. Specialised in SARS-COV2')
+        prog='compare_virion.py', description='Pipeline to compare call variants (SNVs) for viruses. Specialised in SARS-COV2')
 
     parser.add_argument('-i', '--input', dest="input_dir", metavar="input_directory",
                         type=str, required=False, help='REQUIRED. Input directory containing all vcf files')
