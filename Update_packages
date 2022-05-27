@@ -1,0 +1,36 @@
+This is a file to update all the principal packages.
+In each package it is necessary to assess which dependencies are updated and which are outdated and make a decision if it is worth.
+
+# Packages from guppy_covidion.py
+
+## Nanopack
+
+pip install nanopack --upgrade
+
+# Packages from varcal_covidion.py
+
+## Minimap2
+
+conda install -c bioconda -c conda-forge -c defaults -c r minimap2
+
+## Samtools
+
+conda install -c bioconda -c conda-forge -c defaults -c r samtools
+
+## Picard
+
+conda install -c bioconda -c conda-forge -c defaults -c r picard
+
+## Ivar
+
+conda install -c bioconda -c conda-forge -c defaults -c r ivar
+
+# Packages from misc_covidion.py
+
+## SNPEff
+
+conda install -c bioconda -c conda-forge -c defaults -c r snpeff
+
+## Pangolin (There are dependencies that must be update manually)
+
+pangolin --update
