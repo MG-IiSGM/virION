@@ -1090,3 +1090,39 @@ def annotation_to_html(file_annot, sample):
 
             with open(os.path.join(folder, sample + ".html"), 'w+') as f:
                 f.write(final_html)
+
+
+def kraken(sample, report, kraken2_db, krona_html, threads=34):
+
+    cmd_kraken = "kraken2 --db {} --use-names --threads {} --report {} --gzip-compressed {}".format(
+        kraken2_db, str(threads), report, sample)
+
+    # print(cmd_kraken)
+    execute_subprocess(cmd_kraken, isShell=True)
+
+    cmd_krona = "ktImportTaxonomy -m 3 -q 2 -t 5 {} -o {}".format(
+        report, krona_html)
+
+    # print(cmd_krona)
+    execute_subprocess(cmd_krona, isShell=True)
+
+
+def mash_screen(sample, out_dir, mash_database, winner=True, threads=16):
+    """
+    https://mash.readthedocs.io/en/latest/index.html
+    https://gembox.cbcb.umd.edu/mash/refseq.genomes.k21s1000.msh #MASH refseq database
+    wget https://gembox.cbcb.umd.edu/mash/refseq.genomes.k21s1000.msh
+    mash screen -w -p 4 ../refseq.genomes.k21s1000.msh 4_R1.fastq.gz 4_R2.fastq.gz > 4.winner.screen.tab
+    identity, shared-hashes, median-multiplicity, p-value, query-ID, query-comment
+    """
+
+    if not os.path.isfile(mash_database):
+        logger.info(RED + BOLD + "Mash database can't be found\n" + END_FORMATTING + "You can download it typing:\n\
+            wget https://gembox.cbcb.umd.edu/mash/refseq.genomes.k21s1000.msh")
+        sys.exit(1)
+
+    cmd_mash = "mash screen -w -p {} {} {} > {}".format(
+        threads, mash_database, sample, out_dir)
+
+    # print(cmd_mash)
+    execute_subprocess(cmd_mash, isShell=True)

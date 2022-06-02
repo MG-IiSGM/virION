@@ -18,7 +18,7 @@ import concurrent.futures
 # Local application imports
 
 from misc_virion import (check_create_dir, check_remove_file,
-                         extract_read_list, extract_sample_list, execute_subprocess, check_reanalysis, file_to_list, obtain_group_cov_stats, obtain_overal_stats, annotate_snpeff, user_annotation, user_annotation_aa, annotate_pangolin, annotation_to_html, report_samples_html, create_consensus)
+                         extract_read_list, extract_sample_list, execute_subprocess, check_reanalysis, file_to_list, obtain_group_cov_stats, obtain_overal_stats, annotate_snpeff, user_annotation, user_annotation_aa, annotate_pangolin, annotation_to_html, report_samples_html, create_consensus, kraken, mash_screen)
 from compare_virion import (
     ddbb_create_intermediate, remove_position_range, revised_df, ddtb_compare)
 
@@ -79,6 +79,15 @@ def get_arguments():
     input_group.add_argument("-p", "--primers", type=str,
                              required=False, help="Bed file including primers to trim")
 
+    species_group = parser.add_argument_group(
+        "Species determination", "Species databases")
+
+    species_group.add_argument("--kraken2", dest="kraken2_db", type=str,
+                               default=False, required=False, help="Kraken2 database")
+
+    species_group.add_argument("--mash_db", dest="mash_db", type=str, required=False,
+                               default=False, help="MASH NCBI annotation containing bacterial database")
+
     variant_group = parser.add_argument_group(
         "Variant Calling", "Variant Calling parameters")
 
@@ -119,7 +128,10 @@ def get_arguments():
                              required=False, help='BED file with positions to remove')
 
     annot_group.add_argument('--snpeff_database', type=str, required=False,
-                             default='NC_045512.2', help='snpEFF annotation database')
+                             default=False, help='snpEFF annotation database')
+
+    annot_group.add_argument('--pangolin', required=False, default=False,
+                             help='Use pangolin for classification of epidemiological lineages of SARS-CoV2')
 
     compare_group = parser.add_argument_group(
         'Compare', 'parameters for compare_snp')
@@ -411,6 +423,9 @@ if __name__ == "__main__":
 
     # Declare folders created in pipeline and key files
 
+    out_species_dir = os.path.join(output_dir, "Species")
+    check_create_dir(out_species_dir)
+
     out_bam_dir = os.path.join(output_dir, "Bam")
     check_create_dir(out_bam_dir)
 
@@ -475,15 +490,67 @@ if __name__ == "__main__":
                 logger.info("\n" + WHITE_BG + "STARTING SAMPLE: " + sample +
                             " (" + sample_number + "/" + sample_total + ")" + END_FORMATTING + '\n')
 
-            ##### MAPPING #####
-
-            # Mapping with minimap2, sorting Bam and indexing it (also can be made with bwa index & bwa mem -x ont2d)
-
             HQ_filename = os.path.join(input_dir, sample + ".fastq.gz")
             # print(HQ_filename)
             # filename_out = sample.split('.')[0].split('_')[1]
             filename_out = sample
             # print(filename_out)
+            ##### SPECIES DETERMINATION #####
+
+            prior = datetime.datetime.now()
+
+            # Species determination with kraken2 and its standard database and visualization with ImportTaxonomy.pl from kronatools kit
+
+            sample_species_dir = os.path.join(out_species_dir, sample)
+            # print(sample_species_dir)
+            check_create_dir(sample_species_dir)
+            report = os.path.join(sample_species_dir, sample)
+            krona_html = os.path.join(report + ".html")
+            mash_output = os.path.join(report + ".screen.tab")
+
+            if args.kraken2_db != False:
+                if os.path.isfile(krona_html):
+                    logger.info(
+                        YELLOW + krona_html + " EXIST\nOmmiting species determination with Kraken2 for " + sample + END_FORMATTING)
+                else:
+                    logger.info(
+                        GREEN + "Species determination with Kraken2 for sample " + sample + END_FORMATTING)
+                    kraken(HQ_filename, report, args.kraken2_db,
+                           krona_html, threads=args.threads)
+            else:
+                logger.info(
+                    YELLOW + BOLD + "No Kraken database suplied, skipping specie assignation in group " + group_name + END_FORMATTING)
+
+            # Species determination with mash and its bacterial database
+
+            if args.mash_db != False:
+                if os.path.isfile(mash_output):
+                    logger.info(
+                        YELLOW + mash_output + " EXIST\nOmmiting species determination with Mash screen for " + sample + END_FORMATTING)
+                else:
+                    logger.info(
+                        GREEN + "Species determination with Mash for sample " + sample + END_FORMATTING)
+
+                    mash_screen(HQ_filename, mash_output,
+                                args.mash_db, winner=True, threads=args.threads)
+
+                    # Name the columns of the mash output and sort them in descending order by identity
+                    output_sort_species = pd.read_csv(mash_output, sep='\t', header=None, names=[
+                                                      'Identity', 'Share-hashes', 'Median-multiplicity', 'p-value', 'ID accession', 'Organism']).sort_values(by=['Identity'], ascending=False)
+                    output_sort_species.to_csv(
+                        mash_output, sep='\t', index=None)
+            else:
+                logger.info(
+                    YELLOW + BOLD + "No MASH database suplied, skipping specie assignation in group " + group_name + END_FORMATTING)
+
+            after = datetime.datetime.now()
+            print(("Done with function kraken & mash_screen in: %s" %
+                  (after - prior) + "\n"))
+
+            ##### MAPPING #####
+
+            # Mapping with minimap2, sorting Bam and indexing it (also can be made with bwa index & bwa mem -x ont2d)
+
             filename_bam_out = os.path.join(
                 out_bam_dir, filename_out + '.sort.bam')
             filename_bam_trimmed = os.path.join(
@@ -760,6 +827,7 @@ if __name__ == "__main__":
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.threads) as executor:
         futures_pangolin = []
 
+    if args.pangolin != False:
         for root, _, files in os.walk(out_consensus_ivar_dir):
             if root == out_consensus_ivar_dir:
                 for name in files:
@@ -782,6 +850,10 @@ if __name__ == "__main__":
 
                 for future in concurrent.futures.as_completed(futures_pangolin):
                     logger.info(future.result())
+
+    else:
+        logger.info(YELLOW + BOLD + 'No Pangolin flag added, skipping lineage assignation in group ' +
+                    group_name + END_FORMATTING)
 
     after = datetime.datetime.now()
     print(("Done with function annotate_pangolin in: %s" % (after - prior) + "\n"))
