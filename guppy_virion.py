@@ -68,10 +68,10 @@ def get_arguments():
                         help='Require barcodes at both ends. By default it only requires the barcode at one end for the sequences identification')
 
     parser.add_argument('--barcode_kit', type=str, required=False,
-                        default='SQK-RBK110-96', help='Kit of barcodes used [SQK-RBK110-96|EXP-NBD196]. Default: SQK-RBK110-96')
+                        default='SQK-RBK110-96', help='Kit of barcodes used [SQK-RBK110-96|EXP-NBD196|SQK-NBD112-24]. Default: SQK-RBK110-96')
 
     parser.add_argument('-g', '--gpu', type=int, dest='gpu', required=False,
-                        default=8, help='Number of runners per GPU device. Default: 5')
+                        default=8, help='Number of runners per GPU device. Default: 8')
 
     parser.add_argument('-t', '--threads', type=int, dest='threads', required=False,
                         default=30, help='Threads to use (30 threads by default)')
@@ -86,7 +86,7 @@ def get_arguments():
                         required=False, default=0, help='Maximum number of records per fastq')
 
     parser.add_argument("-q", "--min_base_quality", type=int, dest="min_quality", required=False,
-                        default=10, help="Filter on a minimum average read quality score. Default: 10")
+                        default=8, help="Filter on a minimum average read quality score. Default: 8")
 
     arguments = parser.parse_args()
 
