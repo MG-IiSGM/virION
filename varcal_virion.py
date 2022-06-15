@@ -130,7 +130,7 @@ def get_arguments():
     annot_group.add_argument('--snpeff_database', type=str, required=False,
                              default=False, help='snpEFF annotation database')
 
-    annot_group.add_argument('--pangolin', required=False, default=False,
+    annot_group.add_argument('--pangolin', required=False, default=False,  action="store_true",
                              help='Use pangolin for classification of epidemiological lineages of SARS-CoV2')
 
     compare_group = parser.add_argument_group(
@@ -464,9 +464,6 @@ if __name__ == "__main__":
     check_create_dir(out_annot_user_dir)
     out_annot_user_aa_dir = os.path.join(out_annot_dir, "user_aa")  # subfolder
     check_create_dir(out_annot_user_aa_dir)
-    out_annot_pangolin_dir = os.path.join(
-        out_annot_dir, "pangolin")  # subfolder
-    check_create_dir(out_annot_pangolin_dir)
 
     ############### START PIPELINE ###############
 
@@ -495,6 +492,7 @@ if __name__ == "__main__":
             # filename_out = sample.split('.')[0].split('_')[1]
             filename_out = sample
             # print(filename_out)
+
             ##### SPECIES DETERMINATION #####
 
             prior = datetime.datetime.now()
@@ -827,33 +825,38 @@ if __name__ == "__main__":
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.threads) as executor:
         futures_pangolin = []
 
-    if args.pangolin != False:
-        for root, _, files in os.walk(out_consensus_ivar_dir):
-            if root == out_consensus_ivar_dir:
-                for name in files:
-                    if name.endswith('.fa'):
-                        sample = name.split('.')[0]
-                        filename = os.path.join(root, name)
-                        out_pangolin_filename = sample + '.lineage.csv'
-                        out_pangolin_file = os.path.join(
-                            out_annot_pangolin_dir, out_pangolin_filename)
+        if args.pangolin != False:
 
-                        if os.path.isfile(out_pangolin_file):
-                            logger.info(
-                                YELLOW + out_pangolin_file + ' EXIST\nOmmiting lineage for sample ' + sample + END_FORMATTING)
-                        else:
-                            logger.info(
-                                GREEN + 'Obtaining lineage in sample ' + sample + END_FORMATTING)
-                            future = executor.submit(
-                                annotate_pangolin, filename, out_annot_pangolin_dir, out_pangolin_filename, threads=args.threads, max_ambig=0.6)
-                            futures_pangolin.append(future)
+            out_annot_pangolin_dir = os.path.join(
+                out_annot_dir, "pangolin")  # subfolder
+            check_create_dir(out_annot_pangolin_dir)
 
-                for future in concurrent.futures.as_completed(futures_pangolin):
-                    logger.info(future.result())
+            for root, _, files in os.walk(out_consensus_ivar_dir):
+                if root == out_consensus_ivar_dir:
+                    for name in files:
+                        if name.endswith('.fa'):
+                            sample = name.split('.')[0]
+                            filename = os.path.join(root, name)
+                            out_pangolin_filename = sample + '.lineage.csv'
+                            out_pangolin_file = os.path.join(
+                                out_annot_pangolin_dir, out_pangolin_filename)
 
-    else:
-        logger.info(YELLOW + BOLD + 'No Pangolin flag added, skipping lineage assignation in group ' +
-                    group_name + END_FORMATTING)
+                            if os.path.isfile(out_pangolin_file):
+                                logger.info(
+                                    YELLOW + out_pangolin_file + ' EXIST\nOmmiting lineage for sample ' + sample + END_FORMATTING)
+                            else:
+                                logger.info(
+                                    GREEN + 'Obtaining lineage in sample ' + sample + END_FORMATTING)
+                                future = executor.submit(
+                                    annotate_pangolin, filename, out_annot_pangolin_dir, out_pangolin_filename, threads=args.threads, max_ambig=0.6)
+                                futures_pangolin.append(future)
+
+                    for future in concurrent.futures.as_completed(futures_pangolin):
+                        logger.info(future.result())
+
+        else:
+            logger.info(YELLOW + BOLD + 'No Pangolin flag added, skipping lineage assignation in group ' +
+                        group_name + END_FORMATTING)
 
     after = datetime.datetime.now()
     print(("Done with function annotate_pangolin in: %s" % (after - prior) + "\n"))
