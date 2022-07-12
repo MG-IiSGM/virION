@@ -774,8 +774,8 @@ if __name__ == "__main__":
             YELLOW + BOLD + 'Ommiting user annotation, no BED or VCF files supplied' + END_FORMATTING)
     else:
         # Change for raw/filtered annotation
-        for root, _, files in os.walk(out_variant_ivar_dir):
-            if root == out_variant_ivar_dir:  # Change for raw/filtered annotation
+        for root, _, files in os.walk(out_filtered_ivar_dir):
+            if root == out_filtered_ivar_dir:  # Change for raw/filtered annotation
                 for name in files:
                     if name.endswith('.tsv'):
                         sample = name.split('.')[0]
