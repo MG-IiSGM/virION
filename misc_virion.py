@@ -399,7 +399,6 @@ def obtain_overal_stats(out_stats_dir, output_dir, group):
 
     stat_folder = os.path.join(output_dir, 'Stats')
     overal_stat_file = os.path.join(stat_folder, group + ".overal.stats.tab")
-    overal_stat_file = os.path.join(out_stats_dir, group + ".overal.stats.tab")
 
     columns = [
         "#SAMPLE",
