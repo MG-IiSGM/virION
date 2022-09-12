@@ -85,7 +85,7 @@ def get_arguments():
     parser.add_argument('--records_per_fastq', type=int, dest='records_per_fastq',
                         required=False, default=0, help='Maximum number of records per fastq')
 
-    parser.add_argument("-q", "--min_base_quality", type=int, dest="min_quality", required=False,
+    parser.add_argument("-q", "--min_read_quality", type=int, dest="min_read_quality", required=False,
                         default=8, help="Filter on a minimum average read quality score. Default: 8")
 
     parser.add_argument("--headcrop", type=int, dest="headcrop", required=False,
@@ -185,7 +185,7 @@ def ONT_QC_filtering(output_samples, filtered_samples):
     # -q: Filter on a minimum average read quality score
 
     cmd_filtering = "gunzip -c {} | NanoFilt -q {} --headcrop {} --tailcrop {} | gzip > {}".format(
-        output_samples, str(args.min_quality), str(args.headcrop), str(args.tailcrop), filtered_samples)
+        output_samples, str(args.min_read_quality), str(args.headcrop), str(args.tailcrop), filtered_samples)
 
     # print(cmd_filtering)
     execute_subprocess(cmd_filtering, isShell=True)
