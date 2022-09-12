@@ -107,7 +107,7 @@ def get_arguments():
         'Quality parameters', "Parameters for diferent Quality conditions")
 
     quality_group.add_argument('-c', '--coverage30', type=int, default=90, required=False,
-                               help='Minimum percentage of coverage at 30x to clasify as uncovered. Default: 90')
+                               help='Minimum percentage of coverage at 30x to classify as uncovered. Default: 90')
 
     quality_group.add_argument('-n', '--min_snp', type=int, required=False,
                                default=1, help='SNP number to pass quality threshold')
@@ -148,7 +148,7 @@ def get_arguments():
     params_group = parser.add_argument_group(
         'Parameters', 'parameters for diferent stringent conditions')
 
-    params_group.add_argument('-T', '--threads', type=str, dest="threads",
+    params_group.add_argument('-t', '--threads', type=str, dest="threads",
                               required=False, default=34, help='Threads to use. Default: 34')
 
     output_group = parser.add_argument_group(
@@ -910,7 +910,7 @@ if __name__ == "__main__":
         ".revised_INDEL_intermediate.tsv"
 
     recalibrated_snp_matrix_intermediate = ddbb_create_intermediate(
-        out_variant_ivar_dir, out_stats_coverage_dir, min_freq_discard=args.min_allele, min_alt_dp=4, only_snp=args.only_snp)
+        out_variant_ivar_dir, out_stats_coverage_dir, min_freq_discard=args.min_allele, min_alt_dp=5, only_snp=args.only_snp)
     recalibrated_snp_matrix_intermediate.to_csv(
         compare_snp_matrix_recal_intermediate, sep="\t", index=False)
 
