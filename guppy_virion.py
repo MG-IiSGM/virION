@@ -139,7 +139,7 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
     # --barcode_kits: Space separated list of barcoding kit(s) or expansion kit(s) to detect against. Must be in double quotes
     # --require_barcodes_both_ends: Reads will only be classified if there is a barcode above the min_score at both ends of the read
 
-    # --trim_barcodes: Trim the barcodes from the sequences in the output files.
+    # --trim_barcodes: Trim the barcodes from the sequences in the output files. > --disable_trim_barcodes
     # --trim_adapters: Trim the adapters from the sequences in the output files.
     # --trim_primers: Trim the primers from the sequences in the output files.
     # --detect_barcodes: Detect barcode sequences at the front and rear of the read.
@@ -156,7 +156,7 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
         require_barcodes_both_ends = ""
 
     cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '--barcode_kits', barcode_kit, '-t',
-           str(threads), '--detect_barcodes', '--trim_barcodes', '--detect_primer', '--trim_primers', '--detect_adapter', '--trim_adapters', '--fastq_out', '--compress_fastq']
+           str(threads), '--detect_barcodes', '--detect_primer', '--trim_primers', '--detect_adapter', '--trim_adapters', '--fastq_out', '--compress_fastq']
 
     # cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '--barcode_kit', barcode_kit, '-t', str(threads), '--fastq_out', '--compress_fastq']
 
