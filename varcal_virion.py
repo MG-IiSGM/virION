@@ -196,41 +196,6 @@ def minimap2_mapping(filename, filename_bam_out, reference):
     execute_subprocess(cmd_indexing, isShell=False)
 
 
-def picard_markdup(input_bam):
-    """
-    http://broadinstitute.github.io/picard/
-    """
-
-    input_bam = os.path.abspath(input_bam)
-    input_bai = input_bam + '.bai'
-    path_file_name = input_bam.split('.')[0]
-    file_name = input_bam.split('/')[-1]
-    output_markdup = path_file_name + '.rg.markdup.bam'
-    output_markdup_sorted = path_file_name + '.rg.markdup.sorted.bam'
-
-    output_dir = ('/').join(input_bam.split('/')[0:-1])
-    stat_output_dir = os.path.join(output_dir, 'Stats')
-    check_create_dir(stat_output_dir)
-    stat_output_file = file_name + ".markdup.metrics.txt"
-    stat_output_full = os.path.join(stat_output_dir, stat_output_file)
-
-    cmd_markdup = ["picard", "MarkDuplicates", "-I", input_bam,
-                   "-O", output_markdup, "-M", stat_output_full]
-
-    # print(cmd_markdup)
-    execute_subprocess(cmd_markdup)
-
-    cmd_sort = ["samtools", "sort", output_markdup,
-                "-o", output_markdup_sorted]
-
-    # print(cmd_sort)
-    execute_subprocess(cmd_sort)
-
-    check_remove_file(input_bam)
-    check_remove_file(input_bai)
-    check_remove_file(output_markdup)
-
-
 def ivar_variants(reference, input_bam, out_variant_dir, sample, annotation, min_quality=15, min_frequency_threshold=0.2, min_depth=20):
     """
     https://andersen-lab.github.io/ivar/html/manualpage.html
@@ -577,25 +542,6 @@ if __name__ == "__main__":
             print(('Done with function minimap2_mapping in: %s' %
                   (after - prior) + '\n'))
 
-            # # MarkDuplicates with picardtools
-
-            # if args.markduplicates:
-
-            # prior = datetime.datetime.now()
-
-            #     out_markdup_filename = filename_out + '.rg.markdup.sorted.bam'
-            #     out_markdup_file = os.path.join(out_bam_dir, out_markdup_filename)
-
-            #     if os.path.isfile(out_markdup_file):
-            #         logger.info(YELLOW + out_markdup_file + ' Exist\nOmmiting duplicate mark for sample ' + filename_out + END_FORMATTING)
-            #     else:
-            #         logger.info(GREEN + 'Marking Dupes in sample ' + sample + END_FORMATTING)
-            #         logger.info('Input Bam: ' + filename_bam_out)
-            #         picard_markdup(filename_bam_out)
-
-            # after = datetime.datetime.now()
-            # print(('Done with function picard_markdup in: %s' % (after - prior) + '\n'))
-
             ##### VARIANT CALLING #####
 
             # Variant calling with samtools mpileup & ivar variants (also can be made with nanopolish, we should use nanopolish index & nanopolish variants)
@@ -910,7 +856,7 @@ if __name__ == "__main__":
         ".revised_INDEL_intermediate.tsv"
 
     recalibrated_snp_matrix_intermediate = ddbb_create_intermediate(
-        out_variant_ivar_dir, out_stats_coverage_dir, min_freq_discard=args.min_allele, min_alt_dp=5, only_snp=args.only_snp)
+        out_variant_ivar_dir, out_stats_coverage_dir, min_freq_discard=args.min_allele, min_alt_dp=10, only_snp=args.only_snp)
     recalibrated_snp_matrix_intermediate.to_csv(
         compare_snp_matrix_recal_intermediate, sep="\t", index=False)
 

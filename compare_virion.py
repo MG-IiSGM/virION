@@ -677,7 +677,7 @@ if __name__ == '__main__':
             ".revised_INDEL_intermediate.tsv"
 
         recalibrated_snp_matrix_intermediate = ddbb_create_intermediate(
-            input_dir, coverage_dir, min_freq_discard=args.min_allele, min_alt_dp=4, only_snp=args.only_snp)
+            input_dir, coverage_dir, min_freq_discard=args.min_allele, min_alt_dp=10, only_snp=args.only_snp)
 
         if args.remove_bed:
             recalibrated_snp_matrix_intermediate = remove_bed_positions(
