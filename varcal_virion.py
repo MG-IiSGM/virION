@@ -76,9 +76,6 @@ def get_arguments():
     input_group.add_argument("-L", "--sample_list", type=str, required=False,
                              help="Sample names to analyse only in the file supplied")
 
-    input_group.add_argument("-p", "--primers", type=str,
-                             required=False, help="Bed file including primers to trim")
-
     species_group = parser.add_argument_group(
         "Species determination", "Species databases")
 
