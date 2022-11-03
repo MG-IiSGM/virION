@@ -183,6 +183,8 @@ def ONT_QC_filtering(output_samples, filtered_samples):
 
     # -c: Write on standard output, keep the original files unchanged
     # -q: Filter on a minimum average read quality score
+    # --headcrop: Trim n nucleotides from start of read
+    # --tailcrop: Trim n nucleotides from end of read
 
     cmd_filtering = "gunzip -c {} | NanoFilt -q {} --headcrop {} --tailcrop {} | gzip > {}".format(
         output_samples, str(args.min_read_quality), str(args.headcrop), str(args.tailcrop), filtered_samples)
