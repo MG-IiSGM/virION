@@ -17,10 +17,6 @@ conda install -c bioconda -c conda-forge -c defaults -c r minimap2
 
 conda install -c bioconda -c conda-forge -c defaults -c r samtools
 
-## Picard
-
-conda install -c bioconda -c conda-forge -c defaults -c r picard
-
 ## Ivar
 
 conda install -c bioconda -c conda-forge -c defaults -c r ivar
