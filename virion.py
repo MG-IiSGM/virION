@@ -239,37 +239,43 @@ def basecalling_ion(input_dir, out_basecalling_dir, config='dna_r9.4.1_450bps_fa
     execute_subprocess(cmd, isShell=False)
 
 
-def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_ends=False, barcode_kit='SQK-RBK110-96', threads=30):
+def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_ends=False, barcode_kit="EXP-NBD104", threads=30):
 
     # -i: Path to input files
     # -r: Search for input file recursively
     # -s: Path to save files
     # -t: Number of worker threads
+    # --num_barcoding_threads: Number of worker threads to use for barcoding.
+    # -x: Specify GPU device to accelerate barcode detection: 'auto', or 'cuda:<device_id>'.
+
     # --fastq_out: Output Fastq files
     # --compress_fastq: Compress fastq output files with gzip
     # --barcode_kits: Space separated list of barcoding kit(s) or expansion kit(s) to detect against. Must be in double quotes
     # --require_barcodes_both_ends: Reads will only be classified if there is a barcode above the min_score at both ends of the read
+    # --records_per_fastq: Maximum number of records per fastq file, 0 means use a single file (per worker, per run id)
+    # --allow_inferior_barcodes: Reads will still be classified even if both the barcodes at the front and rear (if applicable) were not the best scoring barcodes above the min_score.
 
-    # --trim_barcodes: Trim the barcodes from the sequences in the output files. > --disable_trim_barcodes
-    # --trim_adapters: Trim the adapters from the sequences in the output files.
-    # --trim_primers: Trim the primers from the sequences in the output files.
     # --detect_barcodes: Detect barcode sequences at the front and rear of the read.
     # --detect_adapter: Detect adapter sequences at the front and rear of the read.
     # --detect_primer: Detect primer sequences at the front and rear of the read.
+    # --enable_trim_barcodes: Enable trimming of barcodes from the sequences in the output files. By default is false, barcodes will not be trimmed.
+    # --trim_adapters: Trim the adapters from the sequences in the output files.
+    # --trim_primers: Trim the primers from the sequences in the output files.
+
+    # --min_score_barcode_front: Minimum score to consider a front barcode to be a valid barcode alignment (Default: 60).
+    # --min_score_barcode_rear: Minimum score to consider a rear barcode to be a valid alignment (and min_score_front will then be used for the front only when this is set).
 
     if require_barcodes_both_ends:
         logger.info(
-            GREEN + 'Barcodes are being used at both ends' + END_FORMATTING)
+            GREEN + BOLD + "Barcodes are being used at both ends" + END_FORMATTING + "\n")
         require_barcodes_both_ends = "--require_barcodes_both_ends"
     else:
-        logger.info(YELLOW + DIM + BOLD +
-                    'Barcodes are being used on at least 1 of the ends' + END_FORMATTING)
+        logger.info(
+            YELLOW + BOLD + "Barcodes are being used on at least 1 of the ends" + END_FORMATTING + "\n")
         require_barcodes_both_ends = ""
 
-    cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '--barcode_kits', barcode_kit, '-t',
-           str(threads), '--detect_barcodes', '--detect_primer', '--trim_primers', '--detect_adapter', '--trim_adapters', '--fastq_out', '--compress_fastq']
-
-    # cmd = ['guppy_barcoder', '-i', out_basecalling_dir, '-s', out_barcoding_dir, '-r', require_barcodes_both_ends, '--barcode_kit', barcode_kit, '-t', str(threads), '--fastq_out', '--compress_fastq']
+    cmd = ["guppy_barcoder", "-i", out_basecalling_dir, "-s", out_barcoding_dir, "-r", require_barcodes_both_ends,
+           "--barcode_kits", barcode_kit, "-t", str(threads), '--num_barcoding_threads', str(threads), '--detect_barcodes', '--enable_trim_barcodes', '--detect_primer', '--trim_primers', '--detect_adapter', '--trim_adapters', "--fastq_out", "--compress_fastq"]
 
     print(cmd)
     execute_subprocess(cmd, isShell=False)
@@ -603,7 +609,7 @@ if __name__ == "__main__":
 
     after = datetime.datetime.now()
     print(("\n" + "Done with function basecalling_ion in: %s" %
-          (after - prior) + "\n"))
+           (after - prior) + "\n"))
 
     # Barcoding
 
@@ -622,7 +628,7 @@ if __name__ == "__main__":
 
     after = datetime.datetime.now()
     print(("\n" + "Done with function barcoding_ion in: %s" %
-          (after - prior) + "\n"))
+           (after - prior) + "\n"))
 
     # Read Filtering
 
@@ -716,7 +722,7 @@ if __name__ == "__main__":
 
     after = datetime.datetime.now()
     print(('\n' + "Done with function rename_files & ONT_QC_filtering in: %s" %
-          (after - prior) + "\n"))
+           (after - prior) + "\n"))
 
     # Quality Check
 
@@ -867,7 +873,7 @@ if __name__ == "__main__":
 
             after = datetime.datetime.now()
             print(("Done with function kraken & mash_screen in: %s" %
-                  (after - prior) + "\n"))
+                   (after - prior) + "\n"))
 
             ##### MAPPING #####
 
@@ -899,7 +905,7 @@ if __name__ == "__main__":
 
             after = datetime.datetime.now()
             print(('Done with function minimap2_mapping in: %s' %
-                  (after - prior) + '\n'))
+                   (after - prior) + '\n'))
 
             ##### VARIANT CALLING #####
 
@@ -922,7 +928,7 @@ if __name__ == "__main__":
 
             after = datetime.datetime.now()
             print(('Done with function ivar_variants in: %s' %
-                  (after - prior) + '\n'))
+                   (after - prior) + '\n'))
 
             # Variant filtering by a frequency threshold
 
@@ -942,7 +948,7 @@ if __name__ == "__main__":
 
             after = datetime.datetime.now()
             print(('Done with function filter_tsv_variants in: %s' %
-                  (after - prior) + '\n'))
+                   (after - prior) + '\n'))
 
             ##### CONSENSUS #####
 
@@ -967,7 +973,7 @@ if __name__ == "__main__":
 
             after = datetime.datetime.now()
             print(('Done with function ivar_consensus & replace_consensus_header in: %s' %
-                  (after - prior) + '\n'))
+                   (after - prior) + '\n'))
 
         ##### CREATE STATS AND QUALITY FILTERS #####
 
@@ -990,7 +996,7 @@ if __name__ == "__main__":
 
         after = datetime.datetime.now()
         print(("Done with function create_bamstat in: %s" %
-              (after - prior) + "\n"))
+               (after - prior) + "\n"))
 
         # Create Coverage
 
@@ -1010,7 +1016,7 @@ if __name__ == "__main__":
 
         after = datetime.datetime.now()
         print(("Done with function create_coverage in: %s" %
-              (after - prior) + "\n"))
+               (after - prior) + "\n"))
 
     # Coverage output summary
 
@@ -1221,7 +1227,7 @@ if __name__ == "__main__":
 
     after = datetime.datetime.now()
     print(("Done with function ddbb_create_intermediate in: %s" %
-          (after - prior) + "\n"))
+           (after - prior) + "\n"))
 
     prior = datetime.datetime.now()
 
@@ -1232,7 +1238,7 @@ if __name__ == "__main__":
 
     after = datetime.datetime.now()
     print(("Done with function remove_position_range in: %s" %
-          (after - prior) + "\n"))
+           (after - prior) + "\n"))
 
     prior = datetime.datetime.now()
 
