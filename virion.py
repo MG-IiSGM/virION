@@ -203,6 +203,9 @@ def get_arguments():
     compare_group.add_argument("--min_threshold_discard_position", required=False, type=float,
                                default=0.5, help="Minimum inaccuracies to discard a position. Default: 0.5")
 
+    compare_group.add_argument('-d', '--distance', default=5, required=False,
+                               help='Minimun distance to cluster groups after comparison')
+
     arguments = parser.parse_args()
 
     return arguments
@@ -1257,8 +1260,8 @@ if __name__ == "__main__":
 
     prior = datetime.datetime.now()
 
-    ddtb_compare(compare_snp_matrix_recal, distance=0)
-    ddtb_compare(compare_snp_matrix_INDEL, distance=0, indel=True)
+    ddtb_compare(compare_snp_matrix_recal, distance=args.distance)
+    ddtb_compare(compare_snp_matrix_INDEL, distance=args.distance, indel=True)
 
     after = datetime.datetime.now()
     print(("Done with function ddtb_compare in: %s" % (after - prior) + "\n"))

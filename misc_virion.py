@@ -157,7 +157,7 @@ def execute_subprocess(cmd, isShell=False, isInfo=False):
 
     except OSError as e:
         sys.exit(RED + BOLD + "Failed to execute program '%s': %s" % (prog,
-                 str(e)) + END_FORMATTING)
+                                                                      str(e)) + END_FORMATTING)
 
 
 def file_to_list(file_name):
@@ -185,7 +185,7 @@ def check_reanalysis(output_dir, samples_to_analyze):
 
     # check how many folders exist
     file_exist = sum([os.path.exists(x)
-                     for x in previous_files])  # True = 1, False = 0
+                      for x in previous_files])  # True = 1, False = 0
 
     # Handle reanalysis: First time; reanalysis o reanalysis with aditional samples
     if file_exist > 0:  # Already analysed
@@ -314,17 +314,17 @@ def extract_snp_count(output_dir, sample):
         df = pd.read_csv(filename, sep="\t")
         df = df.drop_duplicates(subset=['POS', 'REF', 'ALT'], keep="first")
         high_quality_snps = df["POS"][(df.PASS == True) &
-                                      (df.ALT_DP >= 20) &
+                                      (df.TOTAL_DP >= 20) &
                                       (df.ALT_FREQ >= 0.7) &
                                       ~(df.ALT.str.startswith('+') | df.ALT.str.startswith('-'))].tolist()
         htz_snps = df["POS"][(df.PASS == True) &
-                             (df.ALT_DP >= 20) &
+                             (df.TOTAL_DP >= 20) &
                              (df.ALT_FREQ < 0.7) &
-                             (df.ALT_FREQ >= 0.4) &
+                             (df.ALT_FREQ >= 0.3) &
                              ~(df.ALT.str.startswith('+') | df.ALT.str.startswith('-'))].tolist()
         indels = df["POS"][(df.PASS == True) &
-                           (df.ALT_DP >= 20) &
-                           (df.ALT_FREQ >= 0.6) &
+                           (df.TOTAL_DP >= 20) &
+                           (df.ALT_FREQ >= 0.7) &
                            (df.ALT.str.startswith('+') | df.ALT.str.startswith('-'))].tolist()
         return (len(high_quality_snps), len(htz_snps), len(indels))
     else:
@@ -491,7 +491,7 @@ def tsv_to_vcf(tsv_file):
     df.fillna(".", inplace=True)
     df["PASS"].replace({True: 'PASS'}, inplace=True)
     df.rename(columns={"REGION": "#CHROM", "GFF_FEATURE": "ID",
-              "ALT_QUAL": "QUAL", "PASS": "FILTER"}, inplace=True)
+                       "ALT_QUAL": "QUAL", "PASS": "FILTER"}, inplace=True)
 
     fial_columns = ['#CHROM', 'POS', 'ID',
                     'REF', 'ALT', 'QUAL', 'FILTER', 'INFO']
