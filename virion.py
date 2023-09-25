@@ -203,7 +203,7 @@ def get_arguments():
     compare_group.add_argument("--min_threshold_discard_position", required=False, type=float,
                                default=0.5, help="Minimum inaccuracies to discard a position. Default: 0.5")
 
-    compare_group.add_argument('-d', '--distance', default=5, required=False,
+    compare_group.add_argument('--distance', default=5, required=False,
                                help='Minimun distance to cluster groups after comparison')
 
     arguments = parser.parse_args()
@@ -306,8 +306,8 @@ def ONT_QC_filtering(output_samples, filtered_samples):
     # --headcrop: Trim n nucleotides from start of read
     # --tailcrop: Trim n nucleotides from end of read
 
-    cmd_filtering = "gunzip -c {} | NanoFilt -q {} --headcrop {} --tailcrop {} | gzip > {}".format(
-        output_samples, str(args.min_read_quality), str(args.headcrop), str(args.tailcrop), filtered_samples)
+    cmd_filtering = "gunzip -c {} | chopper -q {} --headcrop {} --tailcrop {} --threads {}| gzip > {}".format(
+        output_samples, str(args.min_read_quality), str(args.headcrop), str(args.tailcrop), str(args.threads), filtered_samples)
 
     # print(cmd_filtering)
     execute_subprocess(cmd_filtering, isShell=True)
@@ -479,8 +479,9 @@ if __name__ == "__main__":
     args = get_arguments()
 
     input_dir = os.path.abspath(args.input_dir)
-    group_name = input_dir.split('/')[-1]
+
     output_dir = os.path.abspath(args.output)
+    group_name = output_dir.split('/')[-1]
     check_create_dir(output_dir)
 
     reference = os.path.abspath(args.reference)
@@ -699,6 +700,7 @@ if __name__ == "__main__":
                 # print(output_samples)
                 filtered_samples = os.path.join(
                     output_dir, sample.strip() + '.fastq.gz')
+                # print(filtered_samples)
 
                 logger.info('\n' + BLUE + BOLD + sample + END_FORMATTING)
 
@@ -734,7 +736,7 @@ if __name__ == "__main__":
     logger.info("\n" + GREEN + BOLD +
                 "QUALITY CHECK IN RAW" + END_FORMATTING + '\n')
 
-    for root, _, files in os.walk(out_samples_dir):
+    for root, _, files in os.walk(output_dir):
         for name in files:
             if name.endswith('.fastq.gz'):
                 filtered_sample = os.path.join(root, name)
@@ -973,6 +975,13 @@ if __name__ == "__main__":
                 logger.info(
                     GREEN + "Replacing consensus header in " + sample + END_FORMATTING)
                 replace_consensus_header(out_ivar_consensus_file)
+
+            for root, _, files in os.walk(out_consensus_ivar_dir):
+                for name in files:
+                    if name.endswith('qual.txt'):
+                        qual_consensus = os.path.join(
+                            out_consensus_ivar_dir, name)
+                        os.remove(qual_consensus)
 
             after = datetime.datetime.now()
             print(('Done with function ivar_consensus & replace_consensus_header in: %s' %
