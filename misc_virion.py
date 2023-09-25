@@ -360,13 +360,12 @@ def extract_mapped_reads(output_dir, sample):
         return None
 
 
-def extract_n_consensus(output_dir, sample):
+def extract_n_consensus(consensus_folder, sample):
 
     sample = str(sample)
     if '.' in sample:
         sample = sample.split('.')[0]
 
-    consensus_folder = os.path.join(output_dir, 'Consensus/ivar')
     filename = os.path.join(consensus_folder, sample + ".fa")
 
     if os.path.exists(filename):
@@ -377,15 +376,16 @@ def extract_n_consensus(output_dir, sample):
             if sample_fq == sample:
                 # In case fasta is in several lines(not by default)
                 sequence = ("").join(content_list[1:]).strip()
-                all_N = re.findall(r'N+', sequence)
-                leading_N = re.findall(r'^N+', sequence)
-                tailing_N = re.findall(r'N+$', sequence)
-                length_N = [len(x) for x in all_N]
-                individual_N = [x for x in length_N if x == 1]
-                mean_length_N = mean(length_N)
-                sum_length_N = sum(length_N)
-                total_perc_N = sum_length_N / len(sequence) * 100
-                return(len(all_N), len(individual_N), len(leading_N), len(tailing_N), sum_length_N, total_perc_N, mean_length_N)
+                N_groups = re.findall(r'N+', sequence)
+                N_leading = re.findall(r'^N+', sequence)
+                N_tailing = re.findall(r'N+$', sequence)
+                N_sum_len = [len(x) for x in N_groups]
+                N_individual = [x for x in N_sum_len if x == 1]
+                N_mean_len = mean(N_sum_len)
+                N_sum_len = sum(N_sum_len)
+                N_total_perc = N_sum_len / len(sequence) * 100
+                return(len(N_groups), len(N_individual), len(N_leading), len(N_tailing), N_sum_len, N_total_perc, N_mean_len)
+
     else:
         print("FILE " + filename + " NOT FOUND")
         return None
@@ -399,6 +399,7 @@ def obtain_overal_stats(out_stats_dir, output_dir, group):
 
     stat_folder = os.path.join(output_dir, 'Stats')
     overal_stat_file = os.path.join(stat_folder, group + ".overal.stats.tab")
+    consensus_folder = os.path.join(output_dir, 'Consensus/ivar')
 
     columns = [
         "#SAMPLE",
@@ -435,7 +436,7 @@ def obtain_overal_stats(out_stats_dir, output_dir, group):
                     df[["reads_mapped", "perc_mapped"]] = df.parallel_apply(
                         lambda x: extract_mapped_reads(output_dir, x['#SAMPLE']), axis=1, result_type="expand")
                     df[["N_groups", "N_individual", "N_leading", "N_tailing", "N_sum_len", "N_total_perc", "N_mean_len"]] = df.parallel_apply(
-                        lambda x: extract_n_consensus(output_dir, x['#SAMPLE']), axis=1, result_type="expand")
+                        lambda x: extract_n_consensus(consensus_folder, x['#SAMPLE']), axis=1, result_type="expand")
 
     if previous_stat:
         df = pd.concat([df_stat, df], ignore_index=True, sort=True)
