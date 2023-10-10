@@ -58,6 +58,10 @@ def get_arguments():
     parser.add_argument('-o', '--output', type=str, required=True,
                         help='REQUIRED. Output directory to extract all results')
 
+    parser.add_argument('--basecall', type=str, default='dorado', required=True, help="REQUIRED. Program to use in data preprocessing (basecaller and barcoder)")
+
+    parser.add_argument('--model', type=str, default='/home/laura/Scripts/git_repos/Dorado/Models/dna_r9.4.1_e8_sup@v3.6', required=False, help='The basecaller model to run')
+
     parser.add_argument('-s', '--samples', metavar='Samples', type=str, required=False,
                         help='Sample list for conversion from barcode to samples ID')
 
@@ -97,6 +101,32 @@ def get_arguments():
     arguments = parser.parse_args()
 
     return arguments
+
+
+def pod5_conversion(input_dir, out_pod5):
+
+    """
+    https://github.com/nanoporetech/pod5-file-format
+    """
+
+    cmd_conversion = "pod5 convert fast5 {}/*.fast5 --output {} --one-to-one {} --threads {}".format(input_dir, out_pod5, input_dir, str(args.threads))
+
+    print(cmd_conversion)
+    execute_subprocess(cmd_conversion, isShell=True)
+
+
+def basecalling_dorado(input_dir, out_basecalling_dir):
+
+    """
+    https://github.com/nanoporetech/dorado
+    """
+
+    fastq_basecalled = os.path.join(out_basecalling_dir, 'Dorado_basecalled.fastq')
+
+    cmd_basecalling = "dorado basecaller {} {} --emit-fastq > {}".format(str(args.model), input_dir, fastq_basecalled)
+
+    print(cmd_basecalling)
+    execute_subprocess(cmd_basecalling, isShell=True)
 
 
 def basecalling_ion(input_dir, out_basecalling_dir, config='dna_r9.4.1_450bps_fast.cfg', records=0):
@@ -245,24 +275,8 @@ if __name__ == '__main__':
     logger.addHandler(stream_handler)
     logger.addHandler(file_handler)
 
-    logger.info(
-        "\n" + BLUE + '############### START PROCESSING FAST5 FILES ###############' + END_FORMATTING + "\n")
+    logger.info("\n" + BLUE + '############### START PROCESSING FAST5 FILES ###############' + END_FORMATTING + "\n")
     logger.info(args)
-
-    # Obtain all fast5 files from folder
-
-    fast5 = extract_read_list(args.input_dir)
-
-    # Check how many files will be analysed
-
-    sample_list = []
-
-    for sample in fast5:
-        sample = extract_sample_list(sample)
-        sample_list.append(sample)
-
-    logger.info("\n" + CYAN + "{} Samples will be analysed: {}".format(
-        len(sample_list), ",".join(sample_list)) + END_FORMATTING)
 
     # Declare folders created in pipeline and key files
 
@@ -281,24 +295,79 @@ if __name__ == '__main__':
     out_qc_dir = os.path.join(output_dir, 'Quality')
     check_create_dir(out_qc_dir)
 
-    ############### Start pipeline ###############
+    # Obtain all fast5 files from folder
 
-    # Basecalling
+    fast5 = extract_read_list(args.input_dir)
 
-    prior = datetime.datetime.now()
+    # Check how many files will be analysed
 
-    logger.info("\n" + GREEN + BOLD + "STARTING BASECALLING" + END_FORMATTING)
+    sample_list = []
 
-    if os.path.isfile(basecalling_summary):
-        logger.info("\n" + YELLOW + BOLD + "Ommiting BASECALLING" +
-                    END_FORMATTING)
-    else:
-        basecalling_ion(input_dir, out_basecalling_dir,
-                        config=args.config, records=args.records_per_fastq)
+    for sample in fast5:
+        sample = extract_sample_list(sample)
+        sample_list.append(sample)
 
-    after = datetime.datetime.now()
-    print(("\n" + "Done with function basecalling_ion in: %s" %
-           (after - prior) + "\n"))
+    logger.info("\n" + CYAN + "{} Samples will be analysed: {}".format(
+        len(sample_list), ",".join(sample_list)) + END_FORMATTING)
+
+
+   ############### START PIPELINE ###############
+
+    # Dorado
+
+    if args.basecall == 'dorado':
+
+        prior = datetime.datetime.now()
+
+        logger.info("\n" + GREEN + "STARTING BASECALLING WITH DORADO" + END_FORMATTING + "\n")
+
+        if any(file.endswith('.fast5') for file in os.listdir(args.input_dir)):
+
+            out_pod5_dir = os.path.join(output_dir, "Pod5")
+            check_create_dir(out_pod5_dir)
+
+            pod5_conversion(input_dir, out_pod5_dir)
+
+            basecalling_dorado(out_pod5_dir, out_basecalling_dir)
+
+        elif any(file.endswith('.pod5') for file in os.listdir(args.input_dir)):
+
+            basecalling_dorado(input_dir, out_basecalling_dir)
+
+        else:
+            sys.exit(f"Error: The files in {input_dir} are not in .fast5 or pod5 format")
+
+        after = datetime.datetime.now()
+        print(("Done with function basecalling_dorado in: %s" % (after - prior) + "\n"))
+
+    # Guppy
+
+    elif args.basecall == 'guppy':
+
+        prior = datetime.datetime.now()
+
+        logger.info("\n" + GREEN + "STARTING BASECALLING WITH GUPPY" + END_FORMATTING + "\n")
+
+        if any(file.endswith('.fast5') for file in os.listdir(args.input_dir)):
+
+            if os.path.isfile(basecalling_summary):
+                logger.info("\n" + YELLOW + BOLD + "Ommiting BASECALLING" + END_FORMATTING + "\n")
+
+            else:
+                basecalling_ion(input_dir, out_basecalling_dir, config=args.config, records=args.records_per_fastq)
+
+            for root, _, files in os.walk(out_basecalling_dir):
+                for name in files:
+                    if name.startswith('guppy_basecaller_log'):
+                        log_file = os.path.join(out_basecalling_dir, name)
+                        os.remove(log_file)
+
+        else:
+            sys.exit(f"Error: The files in {input_dir} are not in .fast5 format")
+
+        after = datetime.datetime.now()
+        print(("Done with function basecalling_ion in: %s" % (after - prior) + "\n"))
+
 
     # Barcoding
 
