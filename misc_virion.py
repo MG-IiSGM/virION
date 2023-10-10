@@ -103,7 +103,7 @@ def extract_read_list(input_dir):
         if root == input_dir:  # This only apply to parent folder, not subdirectories
             for name in files:
                 filename = os.path.join(root, name)
-                is_files = re.match(r".*\.f(ast)*[q5](\.gz)*", name)
+                is_files = re.match(r".*\.(f(ast)*[q5]|pod5)(\.gz)*", name)
                 if is_files:
                     all_files.append(filename)
 
@@ -1094,7 +1094,7 @@ def annotation_to_html(file_annot, sample):
 
 def kraken(sample, report, kraken2_db, krona_html, threads=34):
 
-    cmd_kraken = "kraken2 --db {} --use-names --threads {} --report {} --gzip-compressed {}".format(
+    cmd_kraken = "kraken2 --db {} --use-names --threads {} --report {} --gzip-compressed {}  --output -".format(
         kraken2_db, str(threads), report, sample)
 
     # print(cmd_kraken)
