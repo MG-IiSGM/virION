@@ -95,10 +95,7 @@ def get_arguments():
 
     basecall_group.add_argument('--basecall', type=str, default='dorado', required=True, help="REQUIRED. Program to use in data preprocessing (basecaller and barcoder)")
 
-    basecall_group.add_argument('--model', type=str, default='~/Scripts/git_repos/Dorado/Models/dna_r9.4.1_e8_sup@v3.6', required=False, help='The basecaller model to run')
-
-    basecall_group.add_argument('-C', '--config', type=str, default='dna_r9.4.1_450bps_fast.cfg', required=False,
-                             help='REQUIRED. Config parameter for guppy_basecalling [fast|hac|sup]. Default: dna_r9.4.1_450bps_fast.cfg | dna_r10.4_e8.1_fast.cfg"')
+    basecall_group.add_argument('--model', type=str, default='~/Scripts/git_repos/Dorado/Models/dna_r10.4.1_e8.2_400bps_hac@v4.3.0', required=False, help='The basecaller model to run. Default dna_r10.4.1_e8.2_400bps_hac@v4.3.0 | dna_r10.4_e8.1_hac.cfg')
 
     basecall_group.add_argument('-b', '--require_barcodes_both_ends', required=False, action='store_true',
                              help='Require barcodes at both ends. By default it only requires the barcode at one end for the sequences identification')
@@ -257,7 +254,7 @@ def demux_dorado(fastq_basecalled, out_barcoding_dir, require_barcodes_both_ends
             YELLOW + BOLD + "Barcodes are being used on at least 1 of the ends" + END_FORMATTING + "\n")
         require_barcodes_both_ends = ""
 
-    cmd_demux = "dorado demux {} --kit-name {} --output-dir {} --emit-fastq".format(fastq_basecalled, barcode_kit, out_barcoding_dir)
+    cmd_demux = "dorado demux {} --kit-name {} --output-dir {} --emit-fastq {} --emit-summary".format(fastq_basecalled, barcode_kit, out_barcoding_dir, require_barcodes_both_ends)
 
     print(cmd_demux)
     execute_subprocess(cmd_demux, isShell=True)
@@ -349,7 +346,7 @@ def barcoding_ion(out_basecalling_dir, out_barcoding_dir, require_barcodes_both_
         require_barcodes_both_ends = ""
 
     cmd = ["guppy_barcoder", "-i", out_basecalling_dir, "-s", out_barcoding_dir, "-r", gpu_device, require_barcodes_both_ends,
-           "--barcode_kits", barcode_kit, "-t", str(threads), '--num_barcoding_threads', str(threads), '--detect_barcodes', '--enable_trim_barcodes', '--detect_primer', '--trim_primers', '--detect_adapter', '--trim_adapters', "--fastq_out", "--compress_fastq"]
+           "--barcode_kits", barcode_kit, "-t", str(threads), '--detect_barcodes', '--enable_trim_barcodes', '--detect_primer', '--trim_primers', '--detect_adapter', '--trim_adapters', "--fastq_out", "--compress_fastq"]
 
     print(cmd)
     execute_subprocess(cmd, isShell=False)
@@ -715,7 +712,7 @@ if __name__ == "__main__":
                 logger.info("\n" + YELLOW + BOLD + "Ommiting BASECALLING" + END_FORMATTING + "\n")
 
             else:
-                basecalling_ion(input_dir, out_basecalling_dir, config=args.config, records=args.records_per_fastq)
+                basecalling_ion(input_dir, out_basecalling_dir, config=args.model, records=args.records_per_fastq)
 
             for root, _, files in os.walk(out_basecalling_dir):
                 for name in files:
