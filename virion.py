@@ -23,7 +23,7 @@ from misc_virion import (check_create_dir, check_file_exists, extract_read_list,
                          obtain_overal_stats, annotate_snpeff, user_annotation, user_annotation_aa, annotate_pangolin, annotation_to_html, report_samples_html, create_consensus, kraken, mash_screen)
 
 from compare_virion import (
-    ddbb_create_intermediate, remove_position_range, revised_df, ddtb_compare)
+    ddbb_create_intermediate, remove_position_range, revised_df, ddtb_compare, extract_lowcov)
 
 
 """
@@ -1390,15 +1390,29 @@ if __name__ == "__main__":
 
     prior = datetime.datetime.now()
 
+    # Extract all low coverage o not covered positions
+    symbol_file = full_path_compare + '_symbol_lowcov.tsv'
+    symbol_lowcov = extract_lowcov(compare_snp_matrix_recal_intermediate) # It is made by the INDEL_intermediate.tsv, taking 0 and 1 into account, can also be made with intermediate.highfreq.tsv
+    symbol_lowcov.to_csv(symbol_file, sep='\t', index=False)
+
     recalibrated_revised_df = revised_df(recalibrated_snp_matrix_intermediate, path_compare, min_freq_include=args.min_frequency,
                                          min_threshold_discard_sample=args.min_threshold_discard_sample, min_threshold_discard_position=args.min_threshold_discard_position, remove_faulty=True, drop_samples=True, drop_positions=True)
-    recalibrated_revised_df.to_csv(
-        compare_snp_matrix_recal, sep="\t", index=False)
+    # recalibrated_revised_df.to_csv(compare_snp_matrix_recal, sep="\t", index=False)
+
+    recalibrated_revised_df = recalibrated_revised_df[~recalibrated_revised_df['Position'].isin(symbol_lowcov['Position'])]
+    recalibrated_revised_df.to_csv(compare_snp_matrix_recal, sep='\t', index=False)
+
+    # Extract all low coverage o not covered positions
+    symbol_INDEL_file = full_path_compare + '_symbol_INDEL_lowcov.tsv'
+    symbol_INDEL_lowcov = extract_lowcov(compare_snp_matrix_INDEL_intermediate) # It is made by the INDEL_intermediate.tsv, taking 0 and 1 into account, can also be made with intermediate.highfreq.tsv
+    symbol_INDEL_lowcov.to_csv(symbol_INDEL_file, sep='\t', index=False)
 
     recalibrated_revised_INDEL_df = revised_df(compare_snp_matrix_INDEL_intermediate_df, path_compare, min_freq_include=args.min_frequency,
                                                min_threshold_discard_sample=args.min_threshold_discard_sample, min_threshold_discard_position=args.min_threshold_discard_position, remove_faulty=True, drop_samples=True, drop_positions=True)
-    recalibrated_revised_INDEL_df.to_csv(
-        compare_snp_matrix_INDEL, sep="\t", index=False)
+    # recalibrated_revised_INDEL_df.to_csv(compare_snp_matrix_INDEL, sep="\t", index=False)
+
+    recalibrated_revised_INDEL_df = recalibrated_revised_INDEL_df[~recalibrated_revised_INDEL_df['Position'].isin(symbol_INDEL_lowcov['Position'])]
+    recalibrated_revised_INDEL_df.to_csv(compare_snp_matrix_INDEL, sep='\t', index=False)
 
     after = datetime.datetime.now()
     print(("Done with function revised_df in: %s" % (after - prior) + "\n"))
